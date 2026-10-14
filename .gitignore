@@ -1,9 +1,9 @@
 # Quarto project
-/.quarto/
-**/*.quarto_ipynb
+.quarto
 
 # renv
 renv/library
+renv/.gitignore
 
 # Other
 Output
