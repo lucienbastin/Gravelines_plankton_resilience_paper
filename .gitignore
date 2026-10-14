@@ -1,0 +1,9 @@
+# Quarto project
+/.quarto/
+**/*.quarto_ipynb
+
+# renv
+renv/library
+
+# Other
+Output
