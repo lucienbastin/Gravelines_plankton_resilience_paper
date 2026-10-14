@@ -1,2 +1,23 @@
 project:
   output-dir: Output
+
+format: html
+
+knitr:
+  opts_chunk:
+    message: FALSE
+    warning: FALSE
+
+fig-width: 12
+fig-height: 7
+
+embed-resources: TRUE
+
+lightbox: TRUE
+
+code-tools: true
+
+toc: TRUE
+toc-location: right-body
+
+df-print: kable
