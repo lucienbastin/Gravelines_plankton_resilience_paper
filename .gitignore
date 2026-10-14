@@ -1,5 +1,6 @@
 # Quarto project
-.quarto
+/.quarto/
+**/*.quarto_ipynb
 
 # renv
 renv/library
