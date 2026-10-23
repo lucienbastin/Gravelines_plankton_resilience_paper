@@ -5,6 +5,3 @@
 # renv
 renv/library
 renv/.gitignore
-
-# Other
-Output
