@@ -5,3 +5,6 @@
 # renv
 renv/library
 renv/.gitignore
+
+# Temporary data
+Data/Temp

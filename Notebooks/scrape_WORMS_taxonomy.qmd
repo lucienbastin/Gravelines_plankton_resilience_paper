@@ -1,0 +1,135 @@
+---
+title: Integrate taxonomy (WORMS) to initial plankton dataframes
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(conflicted)
+library(data.table)
+library(dplyr)
+library(here)
+library(tidyr)
+library(worrms)
+```
+
+```{r}
+conflicted::conflict_scout()
+```
+
+```{r}
+conflicted::conflicts_prefer(
+ dplyr::filter()
+)
+```
+
+## Data
+
+```{r}
+gravelines_phyto <- read.csv(here(
+  "Data/Raw/DOME_PP_IGA_GRAVELINES_Ready_version_2024.csv"
+))
+
+gravelines_zoo <- read.csv(here(
+  "Data/Raw/DOME_ZP_IGA_GRAVELINES_Ready_version_2024.csv"
+))
+```
+
+# Processing
+
+## Data preparation
+
+Select columns of interest in the dataframes.
+
+```{r}
+gravelines_phyto <- gravelines_phyto |>
+  select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE)
+
+gravelines_zoo <- gravelines_zoo |>
+  select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE)
+```
+
+```{r}
+head(gravelines_zoo)
+```
+
+Make classification tables from AphiaID values.
+
+```{r}
+id_to_taxo <- data.frame(
+  id = c(
+    unique(gravelines_phyto$SPECI),
+    unique(gravelines_zoo$SPECI)
+  )
+)
+```
+
+Remove rows where id = 1 ("Biota")
+
+```{r}
+id_to_taxo <- id_to_taxo |>
+  filter(id != 1)
+```
+
+```{r}
+head(id_to_taxo)
+```
+
+## Scraping
+
+Scrape WORMS (https://www.marinespecies.org/) to get the taxonomic information corresponding to each AphiaID
+
+```{r}
+get_taxo_from_id <- function(id) {
+  wm_classification(id) |>
+    select(-AphiaID) |>
+    pivot_wider(names_from = rank, values_from = scientificname)
+}
+```
+
+```{r}
+id_to_taxo <- cbind(
+  id_to_taxo,
+  bind_rows(lapply(id_to_taxo$id, get_taxo_from_id))
+)
+```
+
+```{r}
+head(id_to_taxo)
+```
+
+# Exporting
+
+Join the taxonomic information of each id to the original plankton dataframes
+
+```{r}
+gravelines_phyto <- gravelines_phyto |>
+  left_join(id_to_taxo, by = join_by(SPECI == id))
+
+gravelines_zoo <- gravelines_zoo |>
+  left_join(id_to_taxo, by = join_by(SPECI == id))
+```
+
+```{r}
+write.csv(
+  gravelines_phyto,
+  here("Data/Temp/gravelines_phyto_with_taxo.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  gravelines_zoo,
+  here("Data/Temp/gravelines_zoo_with_taxo.csv"),
+  row.names = FALSE
+)
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
