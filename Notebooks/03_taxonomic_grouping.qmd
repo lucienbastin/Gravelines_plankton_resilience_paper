@@ -1,0 +1,226 @@
+---
+title: Regroup some taxa in superior groups to minimize the effect of changing nomenclature
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(conflicted)
+library(dplyr)
+library(ggh4x)
+library(ggplot2)
+library(here)
+library(lubridate)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+```{r}
+conflicted::conflicts_prefer(
+ dplyr::filter()
+)
+```
+
+## Data
+
+```{r}
+zooplankton_data <- read.csv(here("Data/Temp/zoo_with_taxo.csv"))
+phytoplankton_data <- read.csv(here("Data/Temp/phyto_with_taxo.csv"))
+```
+
+```{r}
+zooplankton_groups <- read.csv(here("Data/Raw/zoo_groups.csv"))
+phytoplankton_groups <- read.csv(here("Data/Raw/phyto_groups.csv"))
+```
+
+# Add group information to taxonomic data
+
+```{r}
+zooplankton_data <- zooplankton_data |>
+  left_join(zooplankton_groups) |>
+  mutate(date = as.Date(date, format = "%Y-%m-%d"))
+
+phytoplankton_data <- phytoplankton_data |>
+  left_join(phytoplankton_groups) |>
+  mutate(date = as.Date(date, format = "%Y-%m-%d"))
+```
+
+```{r}
+head(zooplankton_data)
+```
+
+```{r}
+zooplankton_superior_groups <- data.frame(
+  groups = sort(unique(zooplankton_groups$superior_group)),
+  n_taxa_in_groups = zooplankton_groups |>
+    group_by(superior_group) |>
+    count() |>
+    pull(n)
+)
+
+phytoplankton_superior_groups <- data.frame(
+  groups = sort(unique(phytoplankton_groups$superior_group)),
+  n_taxa_in_groups = phytoplankton_groups |>
+    group_by(superior_group) |>
+    count() |>
+    pull(n)
+)
+```
+
+```{r}
+head(zooplankton_superior_groups)
+```
+
+# Display timeseries of abundance for each taxa in their groups
+
+Add a column with the best available taxonomic information
+
+```{r}
+zooplankton_data <- zooplankton_data |>
+  rowwise() |>
+  mutate(
+    best_taxo = {
+      vals <- c_across(Kingdom:Species)
+      non_na_vals <- vals[!is.na(vals)]
+      if (length(non_na_vals) == 0) NA else tail(non_na_vals, 1)
+    }
+  )
+
+phytoplankton_data <- phytoplankton_data |>
+  rowwise() |>
+  mutate(
+    best_taxo = {
+      vals <- c_across(Kingdom:Species)
+      non_na_vals <- vals[!is.na(vals)]
+      if (length(non_na_vals) == 0) NA else tail(non_na_vals, 1)
+    }
+  )
+```
+
+```{r}
+head(zooplankton_data)
+```
+
+Compute mean abundance per month for each taxa
+
+```{r}
+zooplankton_data_monthly <- zooplankton_data |>
+  mutate(year = year(date), month = month(date)) |>
+  group_by(year, month, best_taxo, superior_group) |>
+  summarize(across(abundance, mean)) |>
+  ungroup() |>
+  mutate(date = ymd(paste(year, month, "01")))
+
+phytoplankton_data_monthly <- phytoplankton_data |>
+  mutate(year = year(date), month = month(date)) |>
+  group_by(year, month, best_taxo, superior_group) |>
+  summarize(across(abundance, mean)) |>
+  ungroup() |>
+  mutate(date = ymd(paste(year, month, "01")))
+```
+
+```{r}
+head(zooplankton_data_monthly)
+```
+
+Function to plot the grouping
+
+```{r}
+plot_plankton_grouping <- function(
+  data,
+  all_superior_groups,
+  first_group,
+  last_group
+) {
+  data <- data |>
+    filter(
+      superior_group %in% all_superior_groups$groups[first_group:last_group]
+    )
+
+  ggplot(data, aes(x = date, y = best_taxo)) +
+    geom_tile(aes(fill = log1p(abundance), color = log1p(abundance))) +
+    facet_wrap(
+      vars(superior_group),
+      scales = "free_y",
+      ncol = 1,
+      strip.position = 'right'
+    ) +
+    force_panelsizes(
+      rows = all_superior_groups$n_taxa_in_groups[first_group:last_group]
+    ) +
+    scale_x_date(expand = c(0, 0), date_breaks = "2 year", date_label = "%Y") +
+    scale_y_discrete(expand = c(0, 0)) +
+    scale_fill_viridis_c() +
+    scale_color_viridis_c() +
+    theme_bw() +
+    theme(
+      panel.grid = element_blank(),
+      strip.background = element_blank(),
+      strip.text.y = element_text(angle = 0),
+      strip.placement = "outside",
+      axis.title.y = element_blank()
+    )
+}
+```
+
+## Plot for zooplankton
+
+```{r}
+#| fig-height: 14
+
+plot_plankton_grouping(zooplankton_data_monthly, zooplankton_superior_groups, 1, 20)
+plot_plankton_grouping(zooplankton_data_monthly, zooplankton_superior_groups, 21, 44)
+```
+
+## Plot for phytoplankton
+
+```{r}
+#| fig-height: 14
+
+plot_plankton_grouping(phytoplankton_data_monthly, phytoplankton_superior_groups, 1, 1)
+plot_plankton_grouping(phytoplankton_data_monthly, phytoplankton_superior_groups, 2, 10)
+```
+
+# Export data
+
+```{r}
+zooplankton_data_grouped <- zooplankton_data |>
+  group_by(date, superior_group, quality_flag) |>
+  summarize(across(abundance, sum))
+
+phytoplankton_data_grouped <- phytoplankton_data |>
+  group_by(date, superior_group, quality_flag) |>
+  summarize(across(abundance, sum))
+```
+
+```{r}
+head(zooplankton_data_grouped)
+```
+
+```{r}
+write.csv(
+  zooplankton_data_grouped,
+  here("Data/Temp/zoo_grouped.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  phytoplankton_data_grouped,
+  here("Data/Temp/phyto_grouped.csv"),
+  row.names = FALSE
+)
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
