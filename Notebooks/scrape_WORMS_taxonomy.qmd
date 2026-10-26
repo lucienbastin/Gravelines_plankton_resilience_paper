@@ -10,7 +10,6 @@ date: today
 
 ```{r}
 library(conflicted)
-library(data.table)
 library(dplyr)
 library(here)
 library(tidyr)
@@ -18,61 +17,42 @@ library(worrms)
 ```
 
 ```{r}
+#| warning: true
+
 conflicted::conflict_scout()
 ```
 
 ```{r}
-conflicted::conflicts_prefer(
- dplyr::filter()
-)
+conflicted::conflicts_prefer(dplyr::filter())
 ```
 
 ## Data
 
 ```{r}
-gravelines_phyto <- read.csv(here(
-  "Data/Raw/DOME_PP_IGA_GRAVELINES_Ready_version_2024.csv"
-))
-
-gravelines_zoo <- read.csv(here(
-  "Data/Raw/DOME_ZP_IGA_GRAVELINES_Ready_version_2024.csv"
-))
+zooplankton_data <- read.csv(here("Data/Temp/zoo_clean.csv"))
+phytoplankton_data <- read.csv(here("Data/Temp/phyto_clean.csv"))
 ```
 
 # Processing
 
-## Data preparation
-
-Select columns of interest in the dataframes.
-
-```{r}
-gravelines_phyto <- gravelines_phyto |>
-  select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE)
-
-gravelines_zoo <- gravelines_zoo |>
-  select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE)
-```
-
-```{r}
-head(gravelines_zoo)
-```
+## Preparation
 
 Make classification tables from AphiaID values.
 
 ```{r}
 id_to_taxo <- data.frame(
-  id = c(
-    unique(gravelines_phyto$SPECI),
-    unique(gravelines_zoo$SPECI)
+  taxo_id = c(
+    unique(zooplankton_data$taxo_id),
+    unique(phytoplankton_data$taxo_id)
   )
 )
 ```
 
-Remove rows where id = 1 ("Biota")
+Remove rows where id = 1 ("Biota", brings no information on what this organism is)
 
 ```{r}
 id_to_taxo <- id_to_taxo |>
-  filter(id != 1)
+  filter(taxo_id != 1)
 ```
 
 ```{r}
@@ -84,8 +64,8 @@ head(id_to_taxo)
 Scrape WORMS (https://www.marinespecies.org/) to get the taxonomic information corresponding to each AphiaID
 
 ```{r}
-get_taxo_from_id <- function(id) {
-  wm_classification(id) |>
+get_taxo_from_id <- function(taxo_id) {
+  wm_classification(taxo_id) |>
     select(-AphiaID) |>
     pivot_wider(names_from = rank, values_from = scientificname)
 }
@@ -94,8 +74,19 @@ get_taxo_from_id <- function(id) {
 ```{r}
 id_to_taxo <- cbind(
   id_to_taxo,
-  bind_rows(lapply(id_to_taxo$id, get_taxo_from_id))
+  bind_rows(lapply(id_to_taxo$taxo_id, get_taxo_from_id))
 )
+```
+
+```{r}
+head(id_to_taxo)
+```
+
+Select the 7 commonly used levels of phylogeny : Kingdom, Phylum, Class, Order, Family, Genus and Species.
+
+```{r}
+id_to_taxo <- id_to_taxo |>
+  select(taxo_id, Kingdom, Phylum, Class, Order, Family, Genus, Species)
 ```
 
 ```{r}
@@ -107,23 +98,27 @@ head(id_to_taxo)
 Join the taxonomic information of each id to the original plankton dataframes
 
 ```{r}
-gravelines_phyto <- gravelines_phyto |>
-  left_join(id_to_taxo, by = join_by(SPECI == id))
+zooplankton_data <- zooplankton_data |>
+  left_join(id_to_taxo)
 
-gravelines_zoo <- gravelines_zoo |>
-  left_join(id_to_taxo, by = join_by(SPECI == id))
+phytoplankton_data <- phytoplankton_data |>
+  left_join(id_to_taxo)
+```
+
+```{r}
+head(zooplankton_data)
 ```
 
 ```{r}
 write.csv(
-  gravelines_phyto,
-  here("Data/Temp/gravelines_phyto_with_taxo.csv"),
+  zooplankton_data,
+  here("Data/Temp/zoo_with_taxo.csv"),
   row.names = FALSE
 )
 
 write.csv(
-  gravelines_zoo,
-  here("Data/Temp/gravelines_zoo_with_taxo.csv"),
+  phytoplankton_data,
+  here("Data/Temp/phyto_with_taxo.csv"),
   row.names = FALSE
 )
 ```

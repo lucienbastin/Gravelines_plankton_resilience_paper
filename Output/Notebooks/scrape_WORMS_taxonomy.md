@@ -1,12 +1,12 @@
 # Integrate taxonomy (WORMS) to initial plankton dataframes
 Lucien Bastin
-2026-10-23
+2026-10-26
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
   - [Data](#data)
 - [Processing](#processing)
-  - [Data preparation](#data-preparation)
+  - [Preparation](#preparation)
   - [Scraping](#scraping)
 - [Exporting](#exporting)
 - [Session info](#session-info)
@@ -17,7 +17,6 @@ Lucien Bastin
 
 ``` r
 library(conflicted)
-library(data.table)
 library(dplyr)
 library(here)
 library(tidyr)
@@ -28,81 +27,58 @@ library(worrms)
 conflicted::conflict_scout()
 ```
 
+    2 conflicts
+
+    • `filter()`: dplyr and stats
+
+    • `lag()`: dplyr and stats
+
 ``` r
-conflicted::conflicts_prefer(
- dplyr::filter()
-)
+conflicted::conflicts_prefer(dplyr::filter())
 ```
 
 ## Data
 
 ``` r
-gravelines_phyto <- read.csv(here(
-  "Data/Raw/DOME_PP_IGA_GRAVELINES_Ready_version_2024.csv"
-))
-
-gravelines_zoo <- read.csv(here(
-  "Data/Raw/DOME_ZP_IGA_GRAVELINES_Ready_version_2024.csv"
-))
+zooplankton_data <- read.csv(here("Data/Temp/zoo_clean.csv"))
+phytoplankton_data <- read.csv(here("Data/Temp/phyto_clean.csv"))
 ```
 
 # Processing
 
-## Data preparation
-
-Select columns of interest in the dataframes.
-
-``` r
-gravelines_phyto <- gravelines_phyto |>
-  select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE)
-
-gravelines_zoo <- gravelines_zoo |>
-  select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE)
-```
-
-``` r
-head(gravelines_zoo)
-```
-
-|    SDATE | SMPNO   | SPECI | MUNIT | VFLAG |     VALUE |
-|---------:|:--------|------:|:------|:------|----------:|
-| 19980107 | 5198701 |   101 | nr/m3 | S     |  25.06964 |
-| 19980107 | 5198701 |   882 | nr/m3 | S     |  16.71309 |
-| 19980107 | 5198701 |   913 | nr/m3 | S     | 214.48468 |
-| 19980107 | 5198701 |  1082 | nr/m3 | S     |  25.06964 |
-| 19980107 | 5198701 |  1101 | nr/m3 | S     |  97.49304 |
-| 19980107 | 5198701 |  1102 | nr/m3 | S     |  13.92758 |
+## Preparation
 
 Make classification tables from AphiaID values.
 
 ``` r
 id_to_taxo <- data.frame(
-  id = c(
-    unique(gravelines_phyto$SPECI),
-    unique(gravelines_zoo$SPECI)
+  taxo_id = c(
+    unique(zooplankton_data$taxo_id),
+    unique(phytoplankton_data$taxo_id)
   )
 )
 ```
 
-Remove rows where id = 1 (“Biota”)
+Remove rows where id = 1 (“Biota”, brings no information on what this
+organism is)
 
 ``` r
 id_to_taxo <- id_to_taxo |>
-  filter(id != 1)
+  filter(taxo_id != 1)
 ```
 
 ``` r
 head(id_to_taxo)
 ```
 
-|     id |
-|-------:|
-| 148967 |
-| 149022 |
-| 149042 |
-| 149064 |
-| 149093 |
-| 149102 |
+| taxo_id |
+|--------:|
+|     101 |
+|     882 |
+|     913 |
+|    1082 |
+|    1101 |
+|    1102 |
 
 ## Scraping
 
@@ -110,8 +86,8 @@ Scrape WORMS (https://www.marinespecies.org/) to get the taxonomic
 information corresponding to each AphiaID
 
 ``` r
-get_taxo_from_id <- function(id) {
-  wm_classification(id) |>
+get_taxo_from_id <- function(taxo_id) {
+  wm_classification(taxo_id) |>
     select(-AphiaID) |>
     pivot_wider(names_from = rank, values_from = scientificname)
 }
@@ -120,7 +96,7 @@ get_taxo_from_id <- function(id) {
 ``` r
 id_to_taxo <- cbind(
   id_to_taxo,
-  bind_rows(lapply(id_to_taxo$id, get_taxo_from_id))
+  bind_rows(lapply(id_to_taxo$taxo_id, get_taxo_from_id))
 )
 ```
 
@@ -128,14 +104,35 @@ id_to_taxo <- cbind(
 head(id_to_taxo)
 ```
 
-| id | Kingdom | Phylum | Subphylum | Class | Subclass | Superorder | Order | Family | Genus | Species | Subkingdom | Infrakingdom | Infraphylum | Phylum (Division) | Subphylum (Subdivision) | Subfamily | Forma | Suborder | Infraclass | Superclass | Tribe | Subgenus | Infraorder | Superfamily | Parvphylum | Gigaclass | Parvorder | Subterclass | Section | Subsection |
+| taxo_id | Kingdom | Phylum | Class | Subclass | Infraclass | Order | Suborder | Family | Subphylum | Superclass | Superorder | Subfamily | Tribe | Genus | Subgenus | Species | Infraorder | Superfamily | Infraphylum | Parvphylum | Gigaclass | Parvorder | Subterclass | Section | Subsection | Subkingdom | Infrakingdom | Phylum (Division) | Subphylum (Subdivision) | Forma |
 |---:|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|
-| 148967 | Chromista | Heterokontophyta | Bacillariophytina | Bacillariophyceae | Coscinodiscophycidae | Biddulphianae | Biddulphiales | Biddulphiaceae | Biddulphia | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
-| 149022 | Chromista | Heterokontophyta | Bacillariophytina | Bacillariophyceae | Coscinodiscophycidae | Lithodesmiophycanae | Lithodesmiales | Lithodesmiaceae | Ditylum | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
-| 149042 | Chromista | Heterokontophyta | Bacillariophytina | Bacillariophyceae | Coscinodiscophycidae | Coscinodiscanae | Melosirales | Melosiraceae | Melosira | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
-| 149064 | Chromista | Heterokontophyta | Bacillariophytina | Bacillariophyceae | Bacillariophycidae | Bacillariophycidae incertae sedis | Rhaponeidales | Rhaphoneidaceae | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
-| 149093 | Chromista | Heterokontophyta | Bacillariophytina | Bacillariophyceae | Fragilariophycidae | Fragilariophycanae | Thalassionematales | Thalassionemataceae | Thalassionema | Thalassionema nitzschioides | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
-| 149102 | Chromista | Heterokontophyta | Bacillariophytina | Bacillariophyceae | Coscinodiscophycidae | Thalassiosiranae | Thalassiosirales | Thalassiosiraceae | Thalassiosira | Thalassiosira gravida | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+| 101 | Animalia | Mollusca | Gastropoda | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+| 882 | Animalia | Annelida | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+| 913 | Animalia | Annelida | Polychaeta | Sedentaria | Canalipalpata | Spionida | Spioniformia | Spionidae | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1082 | Animalia | Arthropoda | Thecostraca | Cirripedia | NA | NA | NA | NA | Crustacea | Multicrustacea | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1101 | Animalia | Arthropoda | Copepoda | NA | Neocopepoda | Cyclopoida | NA | NA | Crustacea | Multicrustacea | Podoplea | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1102 | Animalia | Arthropoda | Copepoda | NA | Neocopepoda | Harpacticoida | NA | NA | Crustacea | Multicrustacea | Podoplea | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+
+Select the 7 commonly used levels of phylogeny : Kingdom, Phylum, Class,
+Order, Family, Genus and Species.
+
+``` r
+id_to_taxo <- id_to_taxo |>
+  select(taxo_id, Kingdom, Phylum, Class, Order, Family, Genus, Species)
+```
+
+``` r
+head(id_to_taxo)
+```
+
+| taxo_id | Kingdom  | Phylum     | Class       | Order         | Family    | Genus | Species |
+|--------:|:---------|:-----------|:------------|:--------------|:----------|:------|:--------|
+|     101 | Animalia | Mollusca   | Gastropoda  | NA            | NA        | NA    | NA      |
+|     882 | Animalia | Annelida   | NA          | NA            | NA        | NA    | NA      |
+|     913 | Animalia | Annelida   | Polychaeta  | Spionida      | Spionidae | NA    | NA      |
+|    1082 | Animalia | Arthropoda | Thecostraca | NA            | NA        | NA    | NA      |
+|    1101 | Animalia | Arthropoda | Copepoda    | Cyclopoida    | NA        | NA    | NA      |
+|    1102 | Animalia | Arthropoda | Copepoda    | Harpacticoida | NA        | NA    | NA      |
 
 # Exporting
 
@@ -143,23 +140,36 @@ Join the taxonomic information of each id to the original plankton
 dataframes
 
 ``` r
-gravelines_phyto <- gravelines_phyto |>
-  left_join(id_to_taxo, by = join_by(SPECI == id))
+zooplankton_data <- zooplankton_data |>
+  left_join(id_to_taxo)
 
-gravelines_zoo <- gravelines_zoo |>
-  left_join(id_to_taxo, by = join_by(SPECI == id))
+phytoplankton_data <- phytoplankton_data |>
+  left_join(id_to_taxo)
 ```
 
 ``` r
+head(zooplankton_data)
+```
+
+| date | sample_no | taxo_id | unit | quality_flag | abundance | Kingdom | Phylum | Class | Order | Family | Genus | Species |
+|:---|:---|---:|:---|:---|---:|:---|:---|:---|:---|:---|:---|:---|
+| 1998-01-07 | 5198701 | 101 | nr/m3 | S | 25.06964 | Animalia | Mollusca | Gastropoda | NA | NA | NA | NA |
+| 1998-01-07 | 5198701 | 882 | nr/m3 | S | 16.71309 | Animalia | Annelida | NA | NA | NA | NA | NA |
+| 1998-01-07 | 5198701 | 913 | nr/m3 | S | 214.48468 | Animalia | Annelida | Polychaeta | Spionida | Spionidae | NA | NA |
+| 1998-01-07 | 5198701 | 1082 | nr/m3 | S | 25.06964 | Animalia | Arthropoda | Thecostraca | NA | NA | NA | NA |
+| 1998-01-07 | 5198701 | 1101 | nr/m3 | S | 97.49304 | Animalia | Arthropoda | Copepoda | Cyclopoida | NA | NA | NA |
+| 1998-01-07 | 5198701 | 1102 | nr/m3 | S | 13.92758 | Animalia | Arthropoda | Copepoda | Harpacticoida | NA | NA | NA |
+
+``` r
 write.csv(
-  gravelines_phyto,
-  here("Data/Temp/gravelines_phyto_with_taxo.csv"),
+  zooplankton_data,
+  here("Data/Temp/zoo_with_taxo.csv"),
   row.names = FALSE
 )
 
 write.csv(
-  gravelines_zoo,
-  here("Data/Temp/gravelines_zoo_with_taxo.csv"),
+  phytoplankton_data,
+  here("Data/Temp/phyto_with_taxo.csv"),
   row.names = FALSE
 )
 ```
@@ -192,12 +202,12 @@ sessionInfo()
     [1] stats     graphics  grDevices datasets  utils     methods   base     
 
     other attached packages:
-    [1] worrms_0.4.3        tidyr_1.3.2         here_1.0.2         
-    [4] dplyr_1.2.1         data.table_1.18.6.1 conflicted_1.2.0   
+    [1] worrms_0.4.3     tidyr_1.3.2      here_1.0.2       dplyr_1.2.1     
+    [5] conflicted_1.2.0
 
     loaded via a namespace (and not attached):
      [1] vctrs_0.7.3      cli_3.6.6        knitr_1.52       rlang_1.3.0     
-     [5] xfun_0.61        crul_1.6.0       purrr_1.2.2      renv_1.3.1      
+     [5] xfun_0.62        crul_1.6.0       purrr_1.2.2      renv_1.3.1      
      [9] generics_0.1.4   jsonlite_2.0.0   glue_1.8.1       httpcode_0.3.0  
     [13] rprojroot_2.1.1  htmltools_0.5.9  triebeard_0.4.1  rmarkdown_2.32  
     [17] evaluate_1.0.5   tibble_3.3.1     fastmap_1.2.0    yaml_2.3.12     
