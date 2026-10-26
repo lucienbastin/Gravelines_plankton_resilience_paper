@@ -5,7 +5,7 @@ format:
   gfm:
     embed-resources: false
     fig-format: png
-    fig-dpi: 100
+    fig-dpi: 72
 
 knitr:
   opts_chunk:

@@ -1,0 +1,90 @@
+---
+title: Clean up datasets
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(conflicted)
+library(dplyr)
+library(here)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+## Data
+
+```{r}
+zooplankton_data <- read.csv(here(
+  "Data/Raw/DOME_ZP_IGA_GRAVELINES_Ready_version_2024.csv"
+))
+
+phytoplankton_data <- read.csv(here(
+  "Data/Raw/DOME_PP_IGA_GRAVELINES_Ready_version_2024.csv"
+))
+```
+
+# Clean plankton variables names and types
+
+The raw data looks like this :
+
+```{r}
+head(zooplankton_data)
+```
+
+We can select relevant variables and change their names to something more informative.
+
+```{r}
+clean_plankton_variables <- function(plankton_data) {
+  plankton_data |>
+    select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE) |>
+    rename(
+      date = SDATE,
+      sample_no = SMPNO,
+      taxo_id = SPECI,
+      unit = MUNIT,
+      quality_flag = VFLAG,
+      abundance = VALUE
+    ) |>
+    mutate(date = as.Date(as.character(date), format = "%Y%m%d"))
+}
+```
+
+```{r}
+zooplankton_data <- clean_plankton_variables(zooplankton_data)
+phytoplankton_data <- clean_plankton_variables(phytoplankton_data)
+```
+
+```{r}
+head(zooplankton_data)
+```
+
+# Export data
+
+```{r}
+write.csv(
+  zooplankton_data,
+  here("Data/Temp/zoo_clean.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  phytoplankton_data,
+  here("Data/Temp/phyto_clean.csv"),
+  row.names = FALSE
+)
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
