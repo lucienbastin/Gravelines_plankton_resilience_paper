@@ -1,0 +1,89 @@
+---
+title: Filter out plankton datasets
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(conflicted)
+library(dplyr)
+library(here)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+```{r}
+conflicted::conflicts_prefer(dplyr::filter())
+```
+
+## Data
+
+```{r}
+zooplankton_data <- read.csv(here("Data/Temp/zoo_grouped.csv"))
+phytoplankton_data <- read.csv(here("Data/Temp/phyto_grouped.csv"))
+```
+
+# Filter out samples (dates) with more than 90% of bad quality flags (S flags)
+
+```{r}
+filter_bad_quality <- function(plankton_data) {
+  plankton_data |>
+    group_by(date) |>
+    filter((sum(quality_flag == "S") / n()) < 0.9) |>
+    ungroup()
+}
+```
+
+```{r}
+zooplankton_data <- filter_bad_quality(zooplankton_data)
+phytoplankton_data <- filter_bad_quality(phytoplankton_data)
+```
+
+# Filter out samples (dates) that contain only fish and decapod larvae
+
+```{r}
+filter_fish_samples <- function(plankton_data) {
+  plankton_data |>
+    group_by(date) |>
+    filter(!(all(superior_group %in% c("Fish_larva", "Decapod_larva")))) |>
+    ungroup()
+}
+```
+
+```{r}
+zooplankton_data <- filter_fish_samples(zooplankton_data)
+phytoplankton_data <- filter_fish_samples(phytoplankton_data)
+```
+
+# Filter out superior groups that should be removed
+
+For instance, benthic taxa. These have already been identified and grouped into the "REMOVE" superior group.
+
+```{r}
+zooplankton_data <- zooplankton_data |>
+  filter(superior_group != "REMOVE")
+
+phytoplankton_data <- phytoplankton_data |>
+  filter(superior_group != "REMOVE")
+```
+
+# Export data
+
+```{r}
+write.csv(zooplankton_data, here("Data/Temp/zoo_filtered.csv"), row.names = FALSE)
+write.csv(phytoplankton_data, here("Data/Temp/phyto_filtered.csv"), row.names = FALSE)
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
