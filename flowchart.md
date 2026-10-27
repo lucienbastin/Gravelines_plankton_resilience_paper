@@ -19,7 +19,11 @@ flowchart TD
   group-plankton-taxa[Group plankton taxa into superior groups]
   click group-plankton-taxa "https://gitlab.com/lucien_bastin/Gravelines_plankton_resilience_paper/-/blob/master/Output/Notebooks/03_taxonomic_grouping.md"
 
+  regularize-timeseries[Regularize time series to have a monthly resolution]
+  click regularize-timeseries "https://gitlab.com/lucien_bastin/Gravelines_plankton_resilience_paper/-/blob/master/Output/Notebooks/05_regularize_to_month.md"
+
   zooplankton-raw-data & phytoplankton-raw-data --> clean-datasets
   clean-datasets --> scrape-worms-taxo
   scrape-worms-taxo --> group-plankton-taxa
+  group-plankton-taxa --> regularize-timeseries
 ```
