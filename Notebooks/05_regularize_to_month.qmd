@@ -1,0 +1,193 @@
+---
+title: Regularize all datasets to have a monthly temporal resolution
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(conflicted)
+library(dplyr)
+library(ggplot2)
+library(ggTimeSeries)
+library(here)
+library(lubridate)
+library(pastecs)
+library(tidyr)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+## Data
+
+```{r}
+zooplankton_data <- read.csv(here("Data/Temp/zoo_filtered.csv"))
+phytoplankton_data <- read.csv(here("Data/Temp/phyto_filtered.csv"))
+```
+
+```{r}
+zooplankton_data$date <- as.Date(zooplankton_data$date)
+```
+
+# Check for irregularities in the time series
+
+```{r}
+zooplankton_sampling <- data.frame(
+  date = unique(zooplankton_data$date),
+  sampled = TRUE
+)
+```
+
+```{r}
+head(zooplankton_sampling)
+```
+
+```{r}
+zooplankton_sampling_calendar <- data.frame(
+  date = seq(as.Date("1998-01-01"), as.Date("2024-12-31"), "days")
+) |>
+  left_join(zooplankton_sampling) |>
+  replace_na(list(sampled = FALSE))
+```
+
+```{r}
+head(zooplankton_sampling_calendar, n = 10)
+```
+
+```{r}
+#| fig-width: 12
+#| fig-height: 14
+#| fig-cap: Calendar of the zooplankton sampling scheme at Gravelines from 1998 to 2025
+
+calendar_palette <- c(
+  "FALSE" = "gray90",
+  "TRUE" = "#ff2222"
+)
+
+ggplot_calendar_heatmap(
+  zooplankton_sampling_calendar,
+  'date',
+  'sampled',
+  monthBorderSize = 0.75
+) +
+  facet_wrap(~Year, ncol = 2) +
+  scale_fill_manual(
+    values = calendar_palette,
+    breaks = c("none", "sampled")
+  ) +
+  labs(x = "Month", y = "Day", fill = "Sampling") +
+  theme_test()
+```
+
+The sampling scheme for zooplankton is not perfectly regular, but it is close to a monthly sampling scheme. We will therefore use a monthly teporal resolution for this project (for zooplankton, phytoplankton and the environmental variables).
+
+Some months have more than one sample, so we need to compute the mean for each month.
+
+Some months have no sample at all. This is more problematic because we need to impute a value to fill in the blanks in order to conserve regular data.
+
+# Compute monthly mean
+
+```{r}
+compute_monthly_means <- function(data) {
+  data |>
+    group_by(
+      year = year(date),
+      month = month(date),
+      superior_group
+    ) |>
+    summarize(across(abundance, mean)) |>
+    ungroup()
+}
+```
+
+```{r}
+zooplankton_monthly_mean <- compute_monthly_means(zooplankton_data)
+phytoplankton_monthly_mean <- compute_monthly_means(phytoplankton_data)
+```
+
+```{r}
+head(zooplankton_monthly_mean)
+```
+
+# Impute missing values
+
+The `pastecs` package allows to generate missing values from the values aroud the missing data point.
+
+```{r}
+regularize_monthly <- function(data) {
+  data_prepared <- data |>
+    mutate(
+      total_month = month + (year - min(year)) * 12,
+      .before = everything()
+    ) |>
+    select(-c(year, month)) |>
+    pivot_wider(
+      names_from = superior_group,
+      values_from = abundance,
+      values_fill = 0
+    )
+
+  regularized_timeseries <- regul(
+    data_prepared$total_month,
+    data_prepared[-1],
+    n = max(data_prepared$total_month),
+    units = "months",
+    frequency = 1,
+    methods = "constant"
+  )
+
+  regularized_data <- data.frame(total_month = regularized_timeseries$x) |>
+    cbind(pastecs::extract(
+      regularized_timeseries,
+      series = colnames(data_prepared[-1])
+    ))
+
+  regularized_data |>
+    mutate(
+      date = min(floor_date(zooplankton_data$date, "month")) +
+        months(total_month - 1),
+      .before = everything()
+    ) |>
+    select(-total_month)
+}
+```
+
+```{r}
+zooplankton_regularized <- regularize_monthly(zooplankton_monthly_mean)
+phytoplankton_regularized <- regularize_monthly(phytoplankton_monthly_mean)
+```
+
+```{r}
+head(zooplankton_regularized)
+```
+
+# Export data
+
+```{r}
+write.csv(
+  zooplankton_regularized,
+  here("Data/Temp/zoo_regularized.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  phytoplankton_regularized,
+  here("Data/Temp/phyto_regularized.csv"),
+  row.names = FALSE
+)
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+
+Document rendered using Quarto version {{< version >}}.
