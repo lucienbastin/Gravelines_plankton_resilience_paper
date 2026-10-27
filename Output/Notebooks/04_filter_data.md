@@ -1,6 +1,6 @@
 # Filter out plankton datasets
 Lucien Bastin
-2026-10-26
+2026-10-27
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -52,6 +52,7 @@ filter_bad_quality <- function(plankton_data) {
   plankton_data |>
     group_by(date) |>
     filter((sum(quality_flag == "S") / n()) < 0.9) |>
+    select(-quality_flag) |>
     ungroup()
 }
 ```
@@ -128,10 +129,10 @@ sessionInfo()
     [1] here_1.0.2       dplyr_1.2.1      conflicted_1.2.0
 
     loaded via a namespace (and not attached):
-     [1] digest_0.6.39    R6_2.6.1         fastmap_1.2.0    tidyselect_1.2.1
-     [5] xfun_0.62        magrittr_2.0.5   glue_1.8.1       cachem_1.1.0    
-     [9] tibble_3.3.1     knitr_1.52       pkgconfig_2.0.3  memoise_2.0.1   
-    [13] htmltools_0.5.9  generics_0.1.4   rmarkdown_2.32   lifecycle_1.0.5 
-    [17] cli_3.6.6        vctrs_0.7.3      renv_1.3.1       compiler_4.6.1  
-    [21] rprojroot_2.1.1  tools_4.6.1      pillar_1.11.1    evaluate_1.0.5  
-    [25] yaml_2.3.12      rlang_1.3.0      jsonlite_2.0.0  
+     [1] vctrs_0.7.3      cli_3.6.6        knitr_1.52       rlang_1.3.0     
+     [5] xfun_0.62        renv_1.3.1       generics_0.1.4   jsonlite_2.0.0  
+     [9] glue_1.8.1       rprojroot_2.1.1  htmltools_0.5.9  rmarkdown_2.32  
+    [13] evaluate_1.0.5   tibble_3.3.1     fastmap_1.2.0    yaml_2.3.12     
+    [17] lifecycle_1.0.5  memoise_2.0.1    compiler_4.6.1   pkgconfig_2.0.3 
+    [21] digest_0.6.39    R6_2.6.1         tidyselect_1.2.1 pillar_1.11.1   
+    [25] magrittr_2.0.5   tools_4.6.1      withr_3.0.3      cachem_1.1.0    
