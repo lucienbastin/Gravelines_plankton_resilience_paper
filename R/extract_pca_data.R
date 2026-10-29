@@ -1,5 +1,8 @@
 # Takes in a vegan rda object and extracts the information needed to plot the pca using ggplot2
 
+library(dplyr)
+library(tibble)
+
 extract_pca_data <- function(
   pca,
   scaling = 1,
@@ -7,13 +10,6 @@ extract_pca_data <- function(
   ax2 = 2
 ) {
   # Internal functions
-
-  "format_pca_data" <- function(data, name) {
-    data |>
-      as.data.frame() |>
-      rename_all(~ gsub("V", "PC", .)) |>
-      rownames_to_column(name)
-  }
 
   "stretch" <- function(sites, species, ax1, ax2, n) {
     tmp1 <- rbind(c(0, 0), sites[, c(ax1, ax2)])
@@ -54,10 +50,17 @@ extract_pca_data <- function(
 
   species <- species * stretch
 
-  # Format to dataframe
+  # Format to dataframes
 
-  sites <- format_pca_data(sites, "sites")
-  species <- format_pca_data(species, "species")
+  sites <- sites |>
+    as.data.frame() |>
+    rename_all(~ gsub("V", "PC", .)) |>
+    rownames_to_column("sites")
+
+  species <- species |>
+    as.data.frame() |>
+    rename_all(~ gsub("V", "PC", .)) |>
+    rownames_to_column("species")
 
   # Percent variance explained by each axis
 
