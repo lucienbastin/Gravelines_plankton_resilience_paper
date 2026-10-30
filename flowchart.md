@@ -29,7 +29,7 @@ flowchart TD
   phytoplankton-deseasonalized-data([Deseasonalized phytoplankton data])
 
   longterm-zooplankton-clustering[Time-constrained clustering of zooplankton data]
-  click longterm-zooplankton-clustering "https://gitlab.com/lucien_bastin/Gravelines_plankton_resilience_paper/-/blob/master/Output/Notebooks/0zooplankton_longterm_clustering.md"
+  click longterm-zooplankton-clustering "https://gitlab.com/lucien_bastin/Gravelines_plankton_resilience_paper/-/blob/master/Output/Notebooks/zooplankton_longterm_clustering.md"
 
   longterm-zooplankton-trajectory[Long-term evolution of the zooplankton community]
   click longterm-zooplankton-trajectory "https://gitlab.com/lucien_bastin/Gravelines_plankton_resilience_paper/-/blob/master/Output/Notebooks/zooplankton_longterm_trajectory.md"
