@@ -1,0 +1,108 @@
+---
+title: Deseasonalize timeseries to focus on long-term changes
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(conflicted)
+library(dplyr)
+library(here)
+library(vegan)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+## Data
+
+```{r}
+zooplankton_data <- read.csv(here("Data/Temp/zoo_regularized.csv"))
+phytoplankton_data <- read.csv(here("Data/Temp/phyto_regularized.csv"))
+```
+
+```{r}
+zooplankton_data$date = as.Date(zooplankton_data$date)
+phytoplankton_data$date = as.Date(phytoplankton_data$date)
+```
+
+# Asymmetric moving average
+
+The deseasonalization method used here is a moving average : all variables are meaned within a moving window of 12 months that slides across the whole timeseries.
+
+The method is called "asymmetric" because for each month, it takes a takes in a different number of months before and after in the window (for instance, 5 months before + the current month + 6 months after = 12 months total).
+
+```{r}
+asymmetric_moving_average <- function(x, n_left, n_right) {
+  out <- rep(NA, n_left)
+
+  for (i in 1:(length(x) - (n_left + n_right))) {
+    start <- i
+    end <- i + n_left + n_right
+
+    out <- c(out, mean(x[start:end]))
+  }
+
+  c(out, rep(NA, n_right))
+}
+```
+
+```{r}
+zooplankton_deseasonalized <- zooplankton_data |>
+  select(-date) |>
+  decostand("hellinger") |>
+  mutate(date = zooplankton_data$date, .before = everything()) |>
+  mutate(across(-date, ~ asymmetric_moving_average(., 6, 5)))
+
+phytoplankton_deseasonalized <- phytoplankton_data |>
+  select(-date) |>
+  # mutate(across(everything(), log1p)) |>
+  decostand("hellinger") |>
+  mutate(date = phytoplankton_data$date, .before = everything()) |>
+  mutate(across(-date, ~ asymmetric_moving_average(., 6, 5)))
+```
+
+```{r}
+head(zooplankton_deseasonalized, n = 10)
+```
+
+We can remove the missing values left over by the moving window
+
+```{r}
+zooplankton_deseasonalized <- zooplankton_deseasonalized |>
+  na.omit()
+
+phytoplankton_deseasonalized <- phytoplankton_deseasonalized |>
+  na.omit()
+```
+
+# Export Data
+
+```{r}
+write.csv(
+  zooplankton_deseasonalized,
+  here("Data/Temp/zoo_deseasonalized.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  phytoplankton_deseasonalized,
+  here("Data/Temp/phyto_deseasonalized.csv"),
+  row.names = FALSE
+)
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+
+Document rendered using Quarto version {{< version >}}.
