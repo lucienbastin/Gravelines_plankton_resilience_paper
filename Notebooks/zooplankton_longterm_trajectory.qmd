@@ -1,0 +1,199 @@
+---
+title: Display the long-term trajectory of the zooplankton community
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(adespatial)
+library(conflicted)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(here)
+library(lubridate)
+library(tidyr)
+library(vegan)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+```{r}
+conflicted::conflicts_prefer(dplyr::filter())
+```
+
+## Functions
+
+```{r}
+source(here("R/extract_pca_data.R"))
+source(here("R/palettes.R"))
+```
+
+## Data
+
+```{r}
+zooplankton_deseasonalized <- read.csv(here("Data/Temp/zoo_deseasonalized.csv")) |>
+  mutate(date = as.Date(date))
+```
+
+```{r}
+zooplankton_longterm_clusters <- read.csv(here(
+  "Data/Temp/zooplankton_longterm_clusters.csv"
+)) |>
+  mutate(date = as.Date(date), cluster = factor(cluster))
+```
+
+# Long-term zooplankton clusters
+
+```{r}
+zoo_pca <- zooplankton_deseasonalized |>
+  select(-date) |>
+  rda() |>
+  extract_pca_data()
+```
+
+```{r}
+transition_dates <- zooplankton_longterm_clusters |>
+  group_by(cluster) |>
+  filter(date == max(date)) |>
+  ungroup() |>
+  filter(row_number() <= n() - 1)
+```
+
+```{r}
+head(transition_dates)
+```
+
+Make a dataframe to store the positions of the colored boxes to display on top of the timeseries
+
+```{r}
+colored_rects_zoo <- data.frame(
+  xmin = c(-Inf, transition_dates$date),
+  xmax = c(transition_dates$date, Inf),
+  cluster = c("1", "2", "3")
+)
+```
+
+Plot the first two PCA axes and overlay the colored boxes on top to show the zooplankton clusters
+
+```{r}
+zoo_pca_series <- zoo_pca$sites_scores |>
+  select(PC1, PC2) |>
+  mutate(date = zooplankton_deseasonalized$date) |>
+  pivot_longer(-date, names_to = "PC", values_to = "val") |>
+  ggplot() +
+  geom_rect(
+    colored_rects_zoo,
+    mapping = aes(
+      xmin = xmin,
+      xmax = xmax,
+      ymin = -Inf,
+      ymax = Inf,
+      fill = cluster
+    ),
+    alpha = 0.7
+  ) +
+  geom_line(aes(x = date, y = val)) +
+  annotate(
+    "segment",
+    x = transition_dates$date,
+    xend = transition_dates$date,
+    y = -Inf,
+    yend = Inf
+  ) +
+  facet_wrap(vars(PC), nrow = 2) +
+  scale_x_date(expand = c(0, 0)) +
+  scale_fill_manual(values = zooplankton_longterm_clusters_palette) +
+  theme_bw() +
+  theme(
+    axis.title = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    strip.background = element_rect(fill = "white")
+  ) +
+  guides(fill = "none")
+```
+
+```{r}
+zoo_pca_series
+```
+
+# Long-term zooplankton community trajectory
+
+```{r}
+years_labels <- zoo_pca$sites_scores |>
+  mutate(
+    date = zooplankton_deseasonalized$date,
+    year = ifelse(month(date) == 1 & year(date) %% 2 == 0, year(date), "")
+  )
+```
+
+```{r}
+zoo_trajectory_plot <- ggplot() +
+  geom_segment(
+    data = zoo_pca$species_scores |> filter(sqrt(PC1**2 + PC2**2) > 0.04),
+    aes(
+      x = 0,
+      y = 0,
+      xend = PC1,
+      yend = PC2
+    ),
+    arrow = arrow(length = unit(.15, 'cm')),
+    lwd = 0.3,
+  ) +
+  geom_path(data = zoo_pca$sites_scores, aes(x = PC1, y = PC2)) +
+  geom_point(
+    data = zoo_pca$sites_scores,
+    aes(x = PC1, y = PC2, color = zooplankton_longterm_clusters$cluster),
+    size = 2
+  ) +
+  geom_label_repel(
+    data = zoo_pca$species_scores |> filter(sqrt(PC1**2 + PC2**2) > 0.04),
+    aes(x = PC1, y = PC2, label = species),
+    size = 3
+  ) +
+  geom_text_repel(
+    data = years_labels,
+    aes(x = PC1, y = PC2, label = year),
+    size = 2.5,
+    min.segment.length = 0,
+    box.padding = 0.5
+  ) +
+  scale_color_manual(values = zooplankton_longterm_clusters_palette) +
+  labs(
+    x = paste0("PC1 (", round(zoo_pca$percent_var[1], 2), "%)"),
+    y = paste0("PC2 (", round(zoo_pca$percent_var[2], 2), "%)"),
+    color = "Long-term zooplankton cluster"
+  ) +
+  coord_fixed() +
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  )
+```
+
+```{r}
+#| fig-width: 10.5
+#| fig-height: 8.5
+
+zoo_trajectory_plot
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+
+Document rendered using Quarto version {{< version >}}.
