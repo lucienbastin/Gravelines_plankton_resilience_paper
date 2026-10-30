@@ -1,0 +1,136 @@
+---
+title: Apply time-constrained clustering to the deseasonalized zooplankton timeseries
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(adespatial)
+library(conflicted)
+library(dendextend)
+library(dplyr)
+library(ggplot2)
+library(here)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+## Scripts
+
+```{r}
+source(here("R/palettes.R"))
+```
+
+## Data
+
+```{r}
+zooplankton_deseasonalized <- read.csv(here("Data/Temp/zoo_deseasonalized.csv"))
+```
+
+# Time-constrained clustering
+
+## Apply the clustering
+
+```{r}
+links <- data.frame(
+  origin = seq(1:nrow(zooplankton_deseasonalized)),
+  target = lead(seq(1:nrow(zooplankton_deseasonalized)), 1)
+) |>
+  na.omit()
+```
+
+```{r}
+head(links)
+```
+
+```{r}
+clustering <- constr.hclust(
+  dist(zooplankton_deseasonalized |> select(-date)),
+  links = links
+)
+```
+
+## Visualize the clustering result as a dendrogram
+
+```{r}
+dendrogram <- as.dendrogram(clustering)
+
+dendrogram_plot <- dendrogram |>
+  dendextend::rotate(c(1:117, 196:313, 118:195)) |>
+  as.ggdend() |>
+  ggplot(labels = FALSE) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(y = "Height") +
+  theme_classic() +
+  theme(
+    axis.line.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+```
+
+```{r}
+dendrogram_plot
+```
+
+It looks like three clusters would be a good fit
+
+```{r}
+zoo_dend_clusters <- cutree(clustering, k = 3)[order.dendrogram(dendrogram)]
+
+dendrogram_plot_colored <- dendrogram |>
+  color_branches(
+    clusters = zoo_dend_clusters,
+    col = zooplankton_longterm_clusters_palette[unique(zoo_dend_clusters)]
+  ) |>
+  dendextend::rotate(c(1:117, 196:313, 118:195)) |>
+  as.ggdend() |>
+  ggplot(labels = FALSE) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(y = "Height") +
+  theme_classic() +
+  theme(
+    axis.line.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+```
+
+```{r}
+dendrogram_plot_colored
+```
+
+# Data export
+
+```{r}
+clusters <- data.frame(
+  date = zooplankton_deseasonalized$date,
+  cluster = as.character(cutree(clustering, 3))
+)
+```
+
+```{r}
+write.csv(
+  clusters,
+  here("Data/Temp/zooplankton_longterm_clusters.csv"),
+  row.names = FALSE
+)
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+
+Document rendered using Quarto version {{< version >}}.
