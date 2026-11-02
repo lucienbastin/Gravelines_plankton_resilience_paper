@@ -1,0 +1,295 @@
+---
+title: Clean up environmental variables datasets
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(conflicted)
+library(dplyr)
+library(ggplot2)
+library(ggTimeSeries)
+library(here)
+library(lubridate)
+library(stringr)
+library(tidyr)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+```{r}
+conflicted::conflicts_prefer(dplyr::filter())
+```
+
+## Data
+
+Physico-chemical variables :
+
+```{r}
+gravelines_environment <- read.csv2(
+  here("Data/Raw/Q2_IGA_GravA_ENV_SEANOE.csv")
+)
+```
+
+Climatological data (from Météo France). Data available at : https://meteofrance.s3.sbg.io.cloud.ovh.net/data/synchro_ftp/BASE/MENS/MENSQ_59_previous-1950-2024.csv.gz
+
+```{r}
+climatological_data <- read.csv2(
+  here("Data/Raw/MENSQ_59_previous-1950-2024.csv")
+)
+```
+
+North Atlantic Oscillation and East Atlantic Pattern. Data available at https://climatedataguide.ucar.edu/sites/default/files/2026-04/nao_pc_monthly.txt (NAO) and https://ftp.cpc.ncep.noaa.gov/wd52dg/data/indices/ea_index.tim (EAP).
+
+```{r}
+nao_data <- readLines(here("Data/Raw/nao_pc_monthly.txt"))
+eap_data <- readLines(here("Data/Raw/ea_index.tim"))
+```
+
+# Clean data
+
+## Physico-chemical variables
+
+```{r}
+gravelines_environment <- gravelines_environment |>
+  select(
+    Passage...Date,
+    Resultat...Code.parametre,
+    Resultat...Valeur.de.la.mesure,
+    Resultat...Symbole.unite.de.mesure.associe.au.quintuplet
+  ) |>
+  rename(
+    date = Passage...Date,
+    variable = Resultat...Code.parametre,
+    value = Resultat...Valeur.de.la.mesure,
+    unit = Resultat...Symbole.unite.de.mesure.associe.au.quintuplet
+  ) |>
+  mutate(
+    date = as.Date(date, format = "%Y-%m-%d"),
+    value = as.numeric(value)
+  ) |>
+  filter(date >= "1998-01-01")
+```
+
+Look at the units for each variable :
+
+```{r}
+gravelines_environment |>
+  select(variable, unit) |>
+  filter(!duplicated(paste(variable, unit)))
+```
+
+Some measures of NO~3~ and NO~3~+NO~2~ have no unit associated. However we won't be keeping those variables (see later) so that is not a problem.
+
+Convert dataset to wide format :
+
+```{r}
+gravelines_environment <- gravelines_environment |>
+  select(-unit) |>
+  pivot_wider(names_from = variable, values_from = value) |>
+  group_by(year = year(date), month = month(date)) |>
+  summarize(across(everything(), ~ mean(., na.rm = TRUE))) |>
+  ungroup() |>
+  select(-c(year, month))
+```
+
+```{r}
+nrow(gravelines_environment)
+```
+
+This dataset has 324 rows, that is one for each month from 1998-01 to 2024-12. We don't need to compute monthly means.
+
+Standardize dates to be on the first day of each month :
+
+```{r}
+gravelines_environment <- gravelines_environment |>
+  mutate(date = as.Date(paste(year(date), month(date), "01", sep = "-")))
+```
+
+Check percentage of missing data
+
+```{r}
+missing_values <- gravelines_environment |>
+  pivot_longer(-date, names_to = "variable", values_to = "value") |>
+  group_by(variable) |>
+  summarize(`missing_%` = sum(is.na(value)) / n()) |>
+  arrange(`missing_%`)
+```
+
+```{r}
+missing_values
+```
+
+Only four variables have no missing data : temperature, ammonium (NH4), chlorophyll a and phaeopigments. The other variables have too many missing values to be imputed, so we remove them.
+
+```{r}
+gravelines_environment <- gravelines_environment |>
+  rename(
+    "temperature" = TEMP,
+    "NH4" = NH4,
+    "chlorophyll_a" = CHLOROA,
+    "phaeopigments" = PHEO
+  ) |>
+  select(date, temperature, NH4, chlorophyll_a, phaeopigments)
+```
+
+```{r}
+head(gravelines_environment)
+```
+
+## Climatology
+
+Newer versions of the datasets may impact the values of NAO and EAP indices : "As is the nature of PC-based indices, every time additional data is used to compute the EOF the individual PC values will likely change." (https://climatedataguide.ucar.edu/climate-data/hurrell-north-atlantic-oscillation-nao-index-pc-based).
+
+The datasets used here were retrieved on november 2nd, 2026.
+
+### NAO
+
+```{r}
+nao_data <- nao_data |>
+  str_split("\\s+")
+```
+
+```{r}
+nao_data <- as.data.frame(
+  as.matrix(do.call(rbind, nao_data[-1]))
+)
+```
+
+```{r}
+colnames(nao_data) <- c("year", paste(1:12))
+```
+
+```{r}
+nao_data <- nao_data |>
+  pivot_longer(-year, names_to = "month", values_to = "nao") |>
+  mutate(
+    date = ymd(paste(year, month, "1", sep = "-")),
+    nao = as.numeric(nao)
+  ) |>
+  select(date, nao) |>
+  filter(date >= as.Date("1998-01-01") & date < as.Date("2024-12-31"))
+```
+
+```{r}
+head(nao_data)
+```
+
+### EAP
+
+```{r}
+eap_data <- eap_data |>
+  str_split("\\s+")
+```
+
+```{r}
+eap_data <- as.data.frame(
+  as.matrix(do.call(rbind, eap_data[-c(1:9)]))
+)
+```
+
+```{r}
+colnames(eap_data) <- c("year", "month", "eap")
+```
+
+```{r}
+eap_data <- eap_data |>
+  mutate(
+    date = ymd(paste(year, month, "1", sep = "-")),
+    eap = as.numeric(eap)
+  ) |>
+  select(date, eap) |>
+  filter(date >= as.Date("1998-01-01") & date < as.Date("2024-12-31"))
+```
+
+```{r}
+head(eap_data)
+```
+
+### Météo France
+
+```{r}
+climatological_data <- climatological_data |>
+  filter(NOM_USUEL == "DUNKERQUE") |>
+  select(AAAAMM, RR, FFM) |>
+  rename(
+    date = AAAAMM,
+    precipitations = RR,
+    wind_speed = FFM
+  ) |>
+  mutate(
+    date = as.Date(paste0(date, "01"), format = "%Y%m%d"),
+    precipitations = as.numeric(precipitations),
+    wind_speed = as.numeric(wind_speed)
+  ) |>
+  filter(date >= as.Date("1998-01-01"))
+```
+
+```{r}
+head(climatological_data)
+```
+
+# Combine all datasets
+
+```{r}
+environmental_data <- gravelines_environment |>
+  left_join(climatological_data) |>
+  left_join(nao_data) |>
+  left_join(eap_data)
+```
+
+```{r}
+head(environmental_data)
+```
+
+Store the units of each variable in a separate dataset
+
+```{r}
+environmental_data_units <- tribble(
+  ~measure         , ~unit       ,
+  "nao"            , "arbitrary" ,
+  "eap"            , "arbitrary" ,
+  "precipitations" , "mm"        ,
+  "wind_speed"     , "m.s-1"     ,
+  "temperature"    , "°C"        ,
+  "NH4"            , "µmol.L-1"  ,
+  "chlorophyll_a"  , "µg.L-1"    ,
+  "phaeopigments"  , "µg.L-1"
+)
+```
+
+```{r}
+environmental_data_units
+```
+
+# Export data
+
+```{r}
+write.csv(
+  environmental_data,
+  here("Data/Temp/environmental_data.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  environmental_data_units,
+  here("Data/Temp/environmental_data_units.csv"),
+  row.names = FALSE
+)
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+
+Document rendered using Quarto version {{< version >}}.
