@@ -17,6 +17,7 @@ library(here)
 library(lubridate)
 library(pastecs)
 library(tidyr)
+library(vegan)
 ```
 
 ```{r}
@@ -92,17 +93,26 @@ Some months have more than one sample, so we need to compute the mean for each m
 
 Some months have no sample at all. This is more problematic because we need to impute a value to fill in the blanks in order to conserve regular data.
 
-# Compute monthly mean
+# Compute monthly means
 
 ```{r}
 compute_monthly_means <- function(data) {
-  data |>
+  data_wide <- data |>
+    pivot_wider(
+      names_from = superior_group,
+      values_from = abundance,
+      values_fill = 0
+    )
+
+  data_wide |>
+    # select(-date) |>
+    # decostand("hellinger") |>
+    # mutate(date = data_wide$date) |>
     group_by(
       year = year(date),
-      month = month(date),
-      superior_group
+      month = month(date)
     ) |>
-    summarize(across(abundance, mean)) |>
+    summarize(across(-date, mean)) |>
     ungroup()
 }
 ```
@@ -127,12 +137,7 @@ regularize_monthly <- function(data) {
       total_month = month + (year - min(year)) * 12,
       .before = everything()
     ) |>
-    select(-c(year, month)) |>
-    pivot_wider(
-      names_from = superior_group,
-      values_from = abundance,
-      values_fill = 0
-    )
+    select(-c(year, month))
 
   regularized_timeseries <- regul(
     data_prepared$total_month,

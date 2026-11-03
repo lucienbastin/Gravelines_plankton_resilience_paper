@@ -23,13 +23,8 @@ conflicted::conflict_scout()
 ## Data
 
 ```{r}
-zooplankton_data <- read.csv(here(
-  "Data/Raw/DOME_ZP_IGA_GRAVELINES_Ready_version_2024.csv"
-))
-
-phytoplankton_data <- read.csv(here(
-  "Data/Raw/DOME_PP_IGA_GRAVELINES_Ready_version_2024.csv"
-))
+zooplankton_data <- read.csv(here("Data/Raw/Zooplankton_Gravelines.csv"))
+phytoplankton_data <- read.csv(here("Data/Raw/Phytoplankton_Gravelines.csv"))
 ```
 
 # Clean plankton variables names and types
@@ -45,21 +40,24 @@ We can select relevant variables and change their names to something more inform
 ```{r}
 clean_plankton_variables <- function(plankton_data) {
   plankton_data |>
-    select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE) |>
+    select(DATE, AphiaID, WoRMS_name, MUNIT, VFLAG, final_value) |>
     rename(
-      date = SDATE,
-      sample_no = SMPNO,
-      taxo_id = SPECI,
+      date = DATE,
+      taxo_id = AphiaID,
+      worms_name = WoRMS_name,
       unit = MUNIT,
       quality_flag = VFLAG,
-      abundance = VALUE
+      abundance = final_value
     ) |>
-    mutate(date = as.Date(as.character(date), format = "%Y%m%d"))
+    mutate(date = as.Date(as.character(date), format = "%d/%m/%Y"))
 }
 ```
 
 ```{r}
-zooplankton_data <- clean_plankton_variables(zooplankton_data)
+zooplankton_data <- zooplankton_data |>
+  rename(final_value = Final_value) |>
+  clean_plankton_variables()
+
 phytoplankton_data <- clean_plankton_variables(phytoplankton_data)
 ```
 

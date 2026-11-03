@@ -1,13 +1,13 @@
 # Regularize all datasets to have a monthly temporal resolution
 Lucien Bastin
-2026-10-27
+2026-11-03
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
   - [Data](#data)
 - [Check for irregularities in the time
   series](#check-for-irregularities-in-the-time-series)
-- [Compute monthly mean](#compute-monthly-mean)
+- [Compute monthly means](#compute-monthly-means)
 - [Impute missing values](#impute-missing-values)
 - [Export data](#export-data)
 - [Session info](#session-info)
@@ -25,6 +25,7 @@ library(here)
 library(lubridate)
 library(pastecs)
 library(tidyr)
+library(vegan)
 ```
 
 ``` r
@@ -137,17 +138,26 @@ Some months have no sample at all. This is more problematic because we
 need to impute a value to fill in the blanks in order to conserve
 regular data.
 
-# Compute monthly mean
+# Compute monthly means
 
 ``` r
 compute_monthly_means <- function(data) {
-  data |>
+  data_wide <- data |>
+    pivot_wider(
+      names_from = superior_group,
+      values_from = abundance,
+      values_fill = 0
+    )
+
+  data_wide |>
+    # select(-date) |>
+    # decostand("hellinger") |>
+    # mutate(date = data_wide$date) |>
     group_by(
       year = year(date),
-      month = month(date),
-      superior_group
+      month = month(date)
     ) |>
-    summarize(across(abundance, mean)) |>
+    summarize(across(-date, mean)) |>
     ungroup()
 }
 ```
@@ -161,14 +171,14 @@ phytoplankton_monthly_mean <- compute_monthly_means(phytoplankton_data)
 head(zooplankton_monthly_mean)
 ```
 
-| year | month | superior_group | abundance |
-|-----:|------:|:---------------|----------:|
-| 1998 |     1 | Acartiidae     |     15.04 |
-| 1998 |     1 | Bryozoan_larva |      0.56 |
-| 1998 |     1 | Calanus        |      0.28 |
-| 1998 |     1 | Centropages    |      4.46 |
-| 1998 |     1 | Chaetognatha   |      0.28 |
-| 1998 |     1 | Cirriped_larva |      2.51 |
+| year | month | Acartiidae | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Cyclopoida | Decapod_larva | Euterpina | Gasteropod_larva | Oikopleura | Paracalanus | Polychaete_larva | Pseudocalanus | Temora | Jellyfish | Pleurobrachia | Bivalvia_larva | Echinoderm_larva | Large_Ctenophora | Labidocera | Corycaeidae | Ascidiacea | Clausidiidae | Cyclopinoides | Stephos | Copepoda | Siphonostomatoida | Monstrilloida | Branchiopoda | Parapontella | Oithona | Doliolum | Isias | Fritillaria | Oncaeidae | Ostracoda | Fish_larva | Longipedia | Eurytemora | Pseudodiaptomus | Harpacticus | Platycopia |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1998 | 1 | 15.04 | 0.56 | 0.28 | 4.46 | 0.28 | 2.51 | 9.75 | 0.28 | 14.48 | 2.51 | 7.24 | 3.34 | 23.40 | 11.98 | 26.18 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998 | 2 | 12.22 | 0.37 | 0.37 | 2.59 | 0.00 | 801.85 | 1.48 | 0.37 | 0.37 | 0.00 | 11.48 | 0.37 | 15.93 | 5.56 | 22.22 | 1.11 | 0.37 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998 | 4 | 13.51 | 0.00 | 0.44 | 1.74 | 0.00 | 0.88 | 0.65 | 0.65 | 1.31 | 0.87 | 9.15 | 0.44 | 15.69 | 3.49 | 28.10 | 0.66 | 0.54 | 1.09 | 1.96 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998 | 5 | 94.58 | 0.00 | 1.15 | 56.52 | 0.00 | 3.46 | 1.15 | 1.16 | 2.31 | 0.00 | 99.19 | 2.31 | 12.68 | 28.84 | 628.60 | 1.61 | 4.27 | 1.15 | 89.97 | 0.35 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998 | 6 | 200.90 | 0.00 | 1.50 | 16.49 | 0.30 | 11.99 | 0.45 | 1.65 | 17.99 | 6.00 | 9.00 | 0.00 | 50.97 | 308.85 | 278.86 | 64.62 | 1.65 | 0.00 | 16.49 | 0.15 | 0.15 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998 | 7 | 521.14 | 0.11 | 0.00 | 1.71 | 0.34 | 4.57 | 0.00 | 0.67 | 13.94 | 0.69 | 2.97 | 0.11 | 12.91 | 0.11 | 8.91 | 0.34 | 0.00 | 0.11 | 0.00 | 0.23 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 # Impute missing values
 
@@ -182,12 +192,7 @@ regularize_monthly <- function(data) {
       total_month = month + (year - min(year)) * 12,
       .before = everything()
     ) |>
-    select(-c(year, month)) |>
-    pivot_wider(
-      names_from = superior_group,
-      values_from = abundance,
-      values_fill = 0
-    )
+    select(-c(year, month))
 
   regularized_timeseries <- regul(
     data_prepared$total_month,
@@ -223,7 +228,7 @@ phytoplankton_regularized <- regularize_monthly(phytoplankton_monthly_mean)
 head(zooplankton_regularized)
 ```
 
-| date | Acartiidae | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Cyclopoida | Decapod_larva | Euterpina | Gasteropod_larva | Oikopleura | Paracalanus | Polychaete_larva | Pseudocalanus | Temora | Jellyfish | Pleurobrachia | Bivalvia_larva | Echinoderm_larva | Large_Ctenophora | Labidocera | Ascidiacea | Branchiopoda | Corycaeidae | Clausidiidae | Cyclopinoides | Stephos | Fish_larva | Copepoda | Oithona | Siphonostomatoida | Monstrilloida | Parapontella | Doliolum | Isias | Fritillaria | Oncaeidae | Ostracoda | Longipedia | Eurytemora | Pseudodiaptomus | Harpacticus | Platycopia |
+| date | Acartiidae | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Cyclopoida | Decapod_larva | Euterpina | Gasteropod_larva | Oikopleura | Paracalanus | Polychaete_larva | Pseudocalanus | Temora | Jellyfish | Pleurobrachia | Bivalvia_larva | Echinoderm_larva | Large_Ctenophora | Labidocera | Corycaeidae | Ascidiacea | Clausidiidae | Cyclopinoides | Stephos | Copepoda | Siphonostomatoida | Monstrilloida | Branchiopoda | Parapontella | Oithona | Doliolum | Isias | Fritillaria | Oncaeidae | Ostracoda | Fish_larva | Longipedia | Eurytemora | Pseudodiaptomus | Harpacticus | Platycopia |
 |:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 1998-01-01 | 15.04 | 0.56 | 0.28 | 4.46 | 0.28 | 2.51 | 9.75 | 0.28 | 14.48 | 2.51 | 7.24 | 3.34 | 23.40 | 11.98 | 26.18 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | 1998-02-01 | 12.22 | 0.37 | 0.37 | 2.59 | 0.00 | 801.85 | 1.48 | 0.37 | 0.37 | 0.00 | 11.48 | 0.37 | 15.93 | 5.56 | 22.22 | 1.11 | 0.37 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -276,22 +281,26 @@ sessionInfo()
     [1] stats     graphics  grDevices datasets  utils     methods   base     
 
     other attached packages:
-    [1] tidyr_1.3.2        pastecs_1.4.2      lubridate_1.9.5    here_1.0.2        
-    [5] ggTimeSeries_1.0.1 ggplot2_4.0.3      dplyr_1.2.1        conflicted_1.2.0  
+     [1] vegan_2.7-6        permute_0.9-10     tidyr_1.3.2        pastecs_1.4.2     
+     [5] lubridate_1.9.5    here_1.0.2         ggTimeSeries_1.0.1 ggplot2_4.0.3     
+     [9] dplyr_1.2.1        conflicted_1.2.0  
 
     loaded via a namespace (and not attached):
-     [1] gtable_0.3.6        jsonlite_2.0.0      compiler_4.6.1     
-     [4] renv_1.3.1          tidyselect_1.2.1    scales_1.4.0       
-     [7] boot_1.3-32         yaml_2.3.12         fastmap_1.2.0      
-    [10] R6_2.6.1            generics_0.1.4      knitr_1.52         
-    [13] tibble_3.3.1        rprojroot_2.1.1     pillar_1.11.1      
-    [16] RColorBrewer_1.1-3  rlang_1.3.0         cachem_1.1.0       
-    [19] xfun_0.62           S7_0.2.2            timechange_0.4.0   
-    [22] memoise_2.0.1       cli_3.6.6           withr_3.0.3        
-    [25] magrittr_2.0.5      digest_0.6.39       grid_4.6.1         
-    [28] lifecycle_1.0.5     vctrs_0.7.3         evaluate_1.0.5     
-    [31] glue_1.8.1          data.table_1.18.6.1 farver_2.1.2       
-    [34] purrr_1.2.2         rmarkdown_2.32      tools_4.6.1        
-    [37] pkgconfig_2.0.3     htmltools_0.5.9    
+     [1] generics_0.1.4      renv_1.3.1          lattice_0.22-9     
+     [4] digest_0.6.39       magrittr_2.0.5      evaluate_1.0.5     
+     [7] grid_4.6.1          timechange_0.4.0    RColorBrewer_1.1-3 
+    [10] fastmap_1.2.0       Matrix_1.7-5        rprojroot_2.1.1    
+    [13] jsonlite_2.0.0      mgcv_1.9-4          purrr_1.2.2        
+    [16] scales_1.4.0        cli_3.6.6           rlang_1.3.0        
+    [19] splines_4.6.1       withr_3.0.3         cachem_1.1.0       
+    [22] yaml_2.3.12         otel_0.2.0          tools_4.6.1        
+    [25] parallel_4.6.1      memoise_2.0.1       boot_1.3-32        
+    [28] vctrs_0.7.3         R6_2.6.1            lifecycle_1.0.5    
+    [31] MASS_7.3-65         cluster_2.1.8.2     pkgconfig_2.0.3    
+    [34] pillar_1.11.1       gtable_0.3.6        data.table_1.18.6.1
+    [37] glue_1.8.1          xfun_0.62           tibble_3.3.1       
+    [40] tidyselect_1.2.1    knitr_1.52          farver_2.1.2       
+    [43] htmltools_0.5.9     nlme_3.1-169        rmarkdown_2.32     
+    [46] compiler_4.6.1      S7_0.2.2           
 
 Document rendered using Quarto version 1.10.18.

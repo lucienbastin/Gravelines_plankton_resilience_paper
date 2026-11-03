@@ -1,6 +1,6 @@
 # Deseasonalize timeseries to focus on long-term changes
 Lucien Bastin
-2026-10-29
+2026-11-03
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -87,7 +87,7 @@ phytoplankton_deseasonalized <- phytoplankton_data |>
 head(zooplankton_deseasonalized, n = 10)
 ```
 
-| date | Acartiidae | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Cyclopoida | Decapod_larva | Euterpina | Gasteropod_larva | Oikopleura | Paracalanus | Polychaete_larva | Pseudocalanus | Temora | Jellyfish | Pleurobrachia | Bivalvia_larva | Echinoderm_larva | Large_Ctenophora | Labidocera | Ascidiacea | Branchiopoda | Corycaeidae | Clausidiidae | Cyclopinoides | Stephos | Fish_larva | Copepoda | Oithona | Siphonostomatoida | Monstrilloida | Parapontella | Doliolum | Isias | Fritillaria | Oncaeidae | Ostracoda | Longipedia | Eurytemora | Pseudodiaptomus | Harpacticus | Platycopia |
+| date | Acartiidae | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Cyclopoida | Decapod_larva | Euterpina | Gasteropod_larva | Oikopleura | Paracalanus | Polychaete_larva | Pseudocalanus | Temora | Jellyfish | Pleurobrachia | Bivalvia_larva | Echinoderm_larva | Large_Ctenophora | Labidocera | Corycaeidae | Ascidiacea | Clausidiidae | Cyclopinoides | Stephos | Copepoda | Siphonostomatoida | Monstrilloida | Branchiopoda | Parapontella | Oithona | Doliolum | Isias | Fritillaria | Oncaeidae | Ostracoda | Fish_larva | Longipedia | Eurytemora | Pseudodiaptomus | Harpacticus | Platycopia |
 |:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | 1998-01-01 | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
 | 1998-02-01 | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
@@ -95,10 +95,10 @@ head(zooplankton_deseasonalized, n = 10)
 | 1998-04-01 | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
 | 1998-05-01 | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
 | 1998-06-01 | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA | NA |
-| 1998-07-01 | 0.3802011 | 0.0580915 | 0.0261881 | 0.1634706 | 0.0643809 | 0.2821767 | 0.0603882 | 0.0461103 | 0.2637977 | 0.0654365 | 0.1861141 | 0.0771243 | 0.2114000 | 0.1618617 | 0.3919280 | 0.0449271 | 0.0243513 | 0.0210192 | 0.1214559 | 0.0042391 | 0.0010268 | 0.0133997 | 0.003522 | 0.0141848 | 0.0434721 | 0.0104899 | 0.0039099 | 0.0000000 | 0.0000000 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998-08-01 | 0.3897563 | 0.0524523 | 0.0249771 | 0.1712444 | 0.0642492 | 0.2800826 | 0.0435777 | 0.0448993 | 0.2792303 | 0.0607305 | 0.1740341 | 0.0661289 | 0.1948728 | 0.1644713 | 0.3857336 | 0.0449271 | 0.0338254 | 0.0248751 | 0.1214559 | 0.0042391 | 0.0010268 | 0.0133997 | 0.003522 | 0.0289144 | 0.0495913 | 0.0104899 | 0.0066864 | 0.0000000 | 0.0000000 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998-09-01 | 0.3952101 | 0.0569262 | 0.0261818 | 0.1854443 | 0.0642492 | 0.2592875 | 0.0430031 | 0.0482376 | 0.2775183 | 0.0607305 | 0.1777012 | 0.0800530 | 0.1928610 | 0.2000939 | 0.3945793 | 0.0455340 | 0.0341758 | 0.0248751 | 0.1214559 | 0.0042391 | 0.0010268 | 0.0133997 | 0.003522 | 0.0303727 | 0.0495913 | 0.0111128 | 0.0066864 | 0.0034053 | 0.0000000 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998-10-01 | 0.4023600 | 0.0637859 | 0.0279235 | 0.2113216 | 0.0655213 | 0.2062094 | 0.0395791 | 0.0536457 | 0.2889830 | 0.0645054 | 0.1914109 | 0.0901511 | 0.2226115 | 0.2195180 | 0.4194779 | 0.0450102 | 0.0352179 | 0.0333156 | 0.1214559 | 0.0042391 | 0.0010268 | 0.0133997 | 0.003522 | 0.0303727 | 0.0495913 | 0.0111128 | 0.0066864 | 0.0090119 | 0.0092462 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998-07-01 | 0.4323094 | 0.0640320 | 0.0261881 | 0.1747478 | 0.0736859 | 0.2795870 | 0.0533452 | 0.0498413 | 0.2604139 | 0.0614174 | 0.1778938 | 0.0840348 | 0.2080991 | 0.1691410 | 0.4014756 | 0.0473486 | 0.0243513 | 0.0210192 | 0.0598032 | 0.0042391 | 0.0010268 | 0.0106638 | 0.0098778 | 0.0434721 | 0.0104899 | 0.0039099 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998-08-01 | 0.4418646 | 0.0583928 | 0.0249771 | 0.1825216 | 0.0735543 | 0.2774929 | 0.0365347 | 0.0486304 | 0.2758465 | 0.0567114 | 0.1658137 | 0.0730394 | 0.1915719 | 0.1717506 | 0.3952812 | 0.0473486 | 0.0338254 | 0.0248751 | 0.0598032 | 0.0042391 | 0.0010268 | 0.0253934 | 0.0098778 | 0.0495913 | 0.0104899 | 0.0066864 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998-09-01 | 0.4708057 | 0.0566808 | 0.0260417 | 0.2016802 | 0.0774102 | 0.2076391 | 0.0398305 | 0.0496950 | 0.3182423 | 0.0639442 | 0.1644739 | 0.0741040 | 0.2002641 | 0.1938063 | 0.4143771 | 0.0443833 | 0.0415875 | 0.0287310 | 0.0598032 | 0.0042391 | 0.0010268 | 0.0401230 | 0.0098778 | 0.0557106 | 0.0104899 | 0.0094630 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998-10-01 | 0.4997467 | 0.0549688 | 0.0271063 | 0.2208388 | 0.0812661 | 0.1377854 | 0.0431262 | 0.0507595 | 0.3606382 | 0.0711770 | 0.1631342 | 0.0751685 | 0.2089563 | 0.2158620 | 0.4334731 | 0.0414181 | 0.0493496 | 0.0325869 | 0.0598032 | 0.0042391 | 0.0010268 | 0.0548527 | 0.0098778 | 0.0618298 | 0.0104899 | 0.0122396 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 We can remove the missing values left over by the moving window
 

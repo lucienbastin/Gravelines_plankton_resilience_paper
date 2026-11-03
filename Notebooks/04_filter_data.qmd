@@ -31,21 +31,25 @@ zooplankton_data <- read.csv(here("Data/Temp/zoo_grouped.csv"))
 phytoplankton_data <- read.csv(here("Data/Temp/phyto_grouped.csv"))
 ```
 
-# Filter out samples (dates) with more than 90% of bad quality flags (S flags)
+# Filter out samples (dates) with too many bad quality flags (S flags)
+
+N.B. sometimes there are both good and bad quality flags for the same organism in the same sample, so we compute the total (sum) abundance of the organism in that case.
 
 ```{r}
-filter_bad_quality <- function(plankton_data) {
+filter_bad_quality <- function(plankton_data, quality_threshold) {
   plankton_data |>
     group_by(date) |>
-    filter((sum(quality_flag == "S") / n()) < 0.9) |>
+    filter((sum(quality_flag == "S") / n()) < quality_threshold) |>
     select(-quality_flag) |>
+    group_by(date, superior_group) |>
+    summarize(across(abundance, sum)) |>
     ungroup()
 }
 ```
 
 ```{r}
-zooplankton_data <- filter_bad_quality(zooplankton_data)
-phytoplankton_data <- filter_bad_quality(phytoplankton_data)
+zooplankton_data <- filter_bad_quality(zooplankton_data, 0.9)
+phytoplankton_data <- filter_bad_quality(phytoplankton_data, 0.9)
 ```
 
 # Filter out samples (dates) that contain only fish and decapod larvae

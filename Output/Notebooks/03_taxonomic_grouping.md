@@ -1,6 +1,6 @@
 # Regroup some taxa in superior groups to minimize the effect of changing nomenclature
 Lucien Bastin
-2026-10-26
+2026-11-03
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -46,8 +46,8 @@ conflicted::conflicts_prefer(
 ## Data
 
 ``` r
-zooplankton_data <- read.csv(here("Data/Temp/zoo_with_taxo.csv"))
-phytoplankton_data <- read.csv(here("Data/Temp/phyto_with_taxo.csv"))
+zooplankton_data <- read.csv(here("Data/Temp/zoo_clean.csv"))
+phytoplankton_data <- read.csv(here("Data/Temp/phyto_clean.csv"))
 ```
 
 ``` r
@@ -71,14 +71,14 @@ phytoplankton_data <- phytoplankton_data |>
 head(zooplankton_data)
 ```
 
-| date | sample_no | taxo_id | unit | quality_flag | abundance | Kingdom | Phylum | Class | Order | Family | Genus | Species | lifecycle | superior_group |
-|:---|:---|---:|:---|:---|---:|:---|:---|:---|:---|:---|:---|:---|:---|:---|
-| 1998-01-07 | 5198701 | 101 | nr/m3 | S | 25.06964 | Animalia | Mollusca | Gastropoda | NA | NA | NA | NA | Meroplanktonic | Gasteropod_larva |
-| 1998-01-07 | 5198701 | 882 | nr/m3 | S | 16.71309 | Animalia | Annelida | NA | NA | NA | NA | NA | Meroplanktonic | Polychaete_larva |
-| 1998-01-07 | 5198701 | 913 | nr/m3 | S | 214.48468 | Animalia | Annelida | Polychaeta | Spionida | Spionidae | NA | NA | Meroplanktonic | Polychaete_larva |
-| 1998-01-07 | 5198701 | 1082 | nr/m3 | S | 25.06964 | Animalia | Arthropoda | Thecostraca | NA | NA | NA | NA | Meroplanktonic | Cirriped_larva |
-| 1998-01-07 | 5198701 | 1101 | nr/m3 | S | 97.49304 | Animalia | Arthropoda | Copepoda | Cyclopoida | NA | NA | NA | Holoplanktonic | Cyclopoida |
-| 1998-01-07 | 5198701 | 1102 | nr/m3 | S | 13.92758 | Animalia | Arthropoda | Copepoda | Harpacticoida | NA | NA | NA | Benthic | REMOVE |
+| date | taxo_id | worms_name | unit | quality_flag | abundance | lifecycle | superior_group |
+|:---|---:|:---|:---|:---|---:|:---|:---|
+| 2024-01-11 | 883 | Polychaeta | nr/m3 | A | 0.50 | Meroplanktonic | Polychaete_larva |
+| 2024-01-11 | 1078 | Ostracoda | nr/m3 | A | 0.50 | Holoplanktonic | Ostracoda |
+| 2024-01-11 | 1080 | Copepoda | nr/m3 | A | 0.76 | Meroplanktonic | Copepoda |
+| 2024-01-11 | 1082 | Cirripedia | nr/m3 | A | 2.02 | Meroplanktonic | Cirriped_larva |
+| 2024-01-11 | 1131 | Isopoda | nr/m3 | A | 4.04 | Holoplanktonic | REMOVE |
+| 2024-01-11 | 1137 | Cumacea | nr/m3 | A | 0.76 | Benthic | REMOVE |
 
 ``` r
 zooplankton_superior_groups <- data.frame(
@@ -113,56 +113,19 @@ head(zooplankton_superior_groups)
 
 # Display timeseries of abundance for each taxa in their groups
 
-Add a column with the best available taxonomic information
-
-``` r
-zooplankton_data <- zooplankton_data |>
-  rowwise() |>
-  mutate(
-    best_taxo = {
-      vals <- c_across(Kingdom:Species)
-      non_na_vals <- vals[!is.na(vals)]
-      if (length(non_na_vals) == 0) NA else tail(non_na_vals, 1)
-    }
-  )
-
-phytoplankton_data <- phytoplankton_data |>
-  rowwise() |>
-  mutate(
-    best_taxo = {
-      vals <- c_across(Kingdom:Species)
-      non_na_vals <- vals[!is.na(vals)]
-      if (length(non_na_vals) == 0) NA else tail(non_na_vals, 1)
-    }
-  )
-```
-
-``` r
-head(zooplankton_data)
-```
-
-| date | sample_no | taxo_id | unit | quality_flag | abundance | Kingdom | Phylum | Class | Order | Family | Genus | Species | lifecycle | superior_group | best_taxo |
-|:---|:---|---:|:---|:---|---:|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|
-| 1998-01-07 | 5198701 | 101 | nr/m3 | S | 25.06964 | Animalia | Mollusca | Gastropoda | NA | NA | NA | NA | Meroplanktonic | Gasteropod_larva | Gastropoda |
-| 1998-01-07 | 5198701 | 882 | nr/m3 | S | 16.71309 | Animalia | Annelida | NA | NA | NA | NA | NA | Meroplanktonic | Polychaete_larva | Annelida |
-| 1998-01-07 | 5198701 | 913 | nr/m3 | S | 214.48468 | Animalia | Annelida | Polychaeta | Spionida | Spionidae | NA | NA | Meroplanktonic | Polychaete_larva | Spionidae |
-| 1998-01-07 | 5198701 | 1082 | nr/m3 | S | 25.06964 | Animalia | Arthropoda | Thecostraca | NA | NA | NA | NA | Meroplanktonic | Cirriped_larva | Thecostraca |
-| 1998-01-07 | 5198701 | 1101 | nr/m3 | S | 97.49304 | Animalia | Arthropoda | Copepoda | Cyclopoida | NA | NA | NA | Holoplanktonic | Cyclopoida | Cyclopoida |
-| 1998-01-07 | 5198701 | 1102 | nr/m3 | S | 13.92758 | Animalia | Arthropoda | Copepoda | Harpacticoida | NA | NA | NA | Benthic | REMOVE | Harpacticoida |
-
 Compute mean abundance per month for each taxa
 
 ``` r
 zooplankton_data_monthly <- zooplankton_data |>
   mutate(year = year(date), month = month(date)) |>
-  group_by(year, month, best_taxo, superior_group) |>
+  group_by(year, month, worms_name, superior_group) |>
   summarize(across(abundance, mean)) |>
   ungroup() |>
   mutate(date = ymd(paste(year, month, "01")))
 
 phytoplankton_data_monthly <- phytoplankton_data |>
   mutate(year = year(date), month = month(date)) |>
-  group_by(year, month, best_taxo, superior_group) |>
+  group_by(year, month, worms_name, superior_group) |>
   summarize(across(abundance, mean)) |>
   ungroup() |>
   mutate(date = ymd(paste(year, month, "01")))
@@ -172,10 +135,10 @@ phytoplankton_data_monthly <- phytoplankton_data |>
 head(zooplankton_data_monthly)
 ```
 
-| year | month | best_taxo             | superior_group   | abundance | date       |
+| year | month | worms_name            | superior_group   | abundance | date       |
 |-----:|------:|:----------------------|:-----------------|----------:|:-----------|
 | 1998 |     1 | Acartia clausi        | Acartiidae       | 82.728914 | 1998-01-01 |
-| 1998 |     1 | Amphipoda             | REMOVE           | 13.789819 | 1998-01-01 |
+| 1998 |     1 | Amphipoda             | REMOVE           | 25.069638 | 1998-01-01 |
 | 1998 |     1 | Annelida              | Polychaete_larva | 16.713092 | 1998-01-01 |
 | 1998 |     1 | Bryozoa               | Bryozoan_larva   |  3.065515 | 1998-01-01 |
 | 1998 |     1 | Calanus helgolandicus | Calanus          |  1.532758 | 1998-01-01 |
@@ -195,7 +158,7 @@ plot_plankton_grouping <- function(
       superior_group %in% all_superior_groups$groups[first_group:last_group]
     )
 
-  ggplot(data, aes(x = date, y = best_taxo)) +
+  ggplot(data, aes(x = date, y = worms_name)) +
     geom_tile(aes(fill = log1p(abundance), color = log1p(abundance))) +
     facet_wrap(
       vars(superior_group),
@@ -227,13 +190,13 @@ plot_plankton_grouping <- function(
 plot_plankton_grouping(zooplankton_data_monthly, zooplankton_superior_groups, 1, 20)
 ```
 
-![](03_taxonomic_grouping_files/figure-commonmark/unnamed-chunk-15-1.png)
+![](03_taxonomic_grouping_files/figure-commonmark/unnamed-chunk-13-1.png)
 
 ``` r
 plot_plankton_grouping(zooplankton_data_monthly, zooplankton_superior_groups, 21, 44)
 ```
 
-![](03_taxonomic_grouping_files/figure-commonmark/unnamed-chunk-15-2.png)
+![](03_taxonomic_grouping_files/figure-commonmark/unnamed-chunk-13-2.png)
 
 ## Plot for phytoplankton
 
@@ -241,13 +204,13 @@ plot_plankton_grouping(zooplankton_data_monthly, zooplankton_superior_groups, 21
 plot_plankton_grouping(phytoplankton_data_monthly, phytoplankton_superior_groups, 1, 1)
 ```
 
-![](03_taxonomic_grouping_files/figure-commonmark/unnamed-chunk-16-1.png)
+![](03_taxonomic_grouping_files/figure-commonmark/unnamed-chunk-14-1.png)
 
 ``` r
 plot_plankton_grouping(phytoplankton_data_monthly, phytoplankton_superior_groups, 2, 10)
 ```
 
-![](03_taxonomic_grouping_files/figure-commonmark/unnamed-chunk-16-2.png)
+![](03_taxonomic_grouping_files/figure-commonmark/unnamed-chunk-14-2.png)
 
 # Export data
 
@@ -325,8 +288,8 @@ sessionInfo()
      [9] R6_2.6.1           labeling_0.4.3     generics_0.1.4     knitr_1.52        
     [13] tibble_3.3.1       rprojroot_2.1.1    pillar_1.11.1      RColorBrewer_1.1-3
     [17] rlang_1.3.0        cachem_1.1.0       xfun_0.62          S7_0.2.2          
-    [21] viridisLite_0.4.3  timechange_0.4.0   memoise_2.0.1      cli_3.6.6         
-    [25] withr_3.0.3        magrittr_2.0.5     digest_0.6.39      grid_4.6.1        
-    [29] lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5     glue_1.8.1        
-    [33] farver_2.1.2       rmarkdown_2.32     tools_4.6.1        pkgconfig_2.0.3   
-    [37] htmltools_0.5.9   
+    [21] otel_0.2.0         viridisLite_0.4.3  timechange_0.4.0   memoise_2.0.1     
+    [25] cli_3.6.6          withr_3.0.3        magrittr_2.0.5     digest_0.6.39     
+    [29] grid_4.6.1         lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5    
+    [33] glue_1.8.1         farver_2.1.2       rmarkdown_2.32     tools_4.6.1       
+    [37] pkgconfig_2.0.3    htmltools_0.5.9   

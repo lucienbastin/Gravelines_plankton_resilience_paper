@@ -1,6 +1,6 @@
 # Clean up plankton datasets
 Lucien Bastin
-2026-11-02
+2026-11-03
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -33,13 +33,8 @@ conflicted::conflict_scout()
 ## Data
 
 ``` r
-zooplankton_data <- read.csv(here(
-  "Data/Raw/DOME_ZP_IGA_GRAVELINES_Ready_version_2024.csv"
-))
-
-phytoplankton_data <- read.csv(here(
-  "Data/Raw/DOME_PP_IGA_GRAVELINES_Ready_version_2024.csv"
-))
+zooplankton_data <- read.csv(here("Data/Raw/Zooplankton_Gravelines.csv"))
+phytoplankton_data <- read.csv(here("Data/Raw/Phytoplankton_Gravelines.csv"))
 ```
 
 # Clean plankton variables names and types
@@ -50,14 +45,14 @@ The raw data looks like this :
 head(zooplankton_data)
 ```
 
-| RLABO | SHIPC | CRUIS | STNNO | LATIT | LONGI | POSYS | STATN | SDATE | STIME | WADEP | SMPNO | FINFL | SMVOL | MNDEP | MXDEP | SPECI | TRPHY | STAGE | PARAM | MUNIT | VFLAG | ALABO | METOA | METFP | SLABO | SMTYP | MPROG | PURPM | MYEAR | DTYPE | RLIST | SIZCL | SIZRF | SFLAG | VALUE |
-|:---|:---|---:|:---|---:|---:|:---|:---|---:|:---|:---|:---|:---|:---|---:|---:|---:|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|---:|:---|:---|:---|:---|:---|---:|
-| BAMN | AA31 | 1998 | 5198701 | 2.15003 | 51.02219 | NA | GRAV - Canal Amenee | 19980107 | 00:00:00 | NA | 5198701 | NA | NA | 2 | 5 | 101 | NA | NA | ABUNDNR | nr/m3 | S | NA | NA | NA | NA | NA | CEMP~NATL | T~S | 1998 | ZP | ERID | NA | NA | NA | 25.06964 |
-| BAMN | AA31 | 1998 | 5198701 | 2.15003 | 51.02219 | NA | GRAV - Canal Amenee | 19980107 | 00:00:00 | NA | 5198701 | NA | NA | 2 | 5 | 882 | NA | NA | ABUNDNR | nr/m3 | S | NA | NA | NA | NA | NA | CEMP~NATL | T~S | 1998 | ZP | ERID | NA | NA | NA | 16.71309 |
-| BAMN | AA31 | 1998 | 5198701 | 2.15003 | 51.02219 | NA | GRAV - Canal Amenee | 19980107 | 00:00:00 | NA | 5198701 | NA | NA | 2 | 5 | 913 | NA | NA | ABUNDNR | nr/m3 | S | NA | NA | NA | NA | NA | CEMP~NATL | T~S | 1998 | ZP | ERID | NA | NA | NA | 214.48468 |
-| BAMN | AA31 | 1998 | 5198701 | 2.15003 | 51.02219 | NA | GRAV - Canal Amenee | 19980107 | 00:00:00 | NA | 5198701 | NA | NA | 2 | 5 | 1082 | NA | NA | ABUNDNR | nr/m3 | S | NA | NA | NA | NA | NA | CEMP~NATL | T~S | 1998 | ZP | ERID | NA | NA | NA | 25.06964 |
-| BAMN | AA31 | 1998 | 5198701 | 2.15003 | 51.02219 | NA | GRAV - Canal Amenee | 19980107 | 00:00:00 | NA | 5198701 | NA | NA | 2 | 5 | 1101 | NA | NA | ABUNDNR | nr/m3 | S | NA | NA | NA | NA | NA | CEMP~NATL | T~S | 1998 | ZP | ERID | NA | NA | NA | 97.49304 |
-| BAMN | AA31 | 1998 | 5198701 | 2.15003 | 51.02219 | NA | GRAV - Canal Amenee | 19980107 | 00:00:00 | NA | 5198701 | NA | NA | 2 | 5 | 1102 | NA | NA | ABUNDNR | nr/m3 | S | NA | NA | NA | NA | NA | CEMP~NATL | T~S | 1998 | ZP | ERID | NA | NA | NA | 13.92758 |
+| CNTRY | CRUIS | STNNO | SMPNO | MPROG | PURPM | MYEAR | DATE | Latitude | Longitude | MNDEP | MXDEP | STATN | OSPAR_region | HELCOM_subbasin | RLABO | ALABO | SLABO | RLIST | SPECI | SPECI_name | AphiaID | WoRMS_name | AphiaID_accepted | WoRMS_accepted_name | SEXCO | SFLAG | SIZCL | SIZRF | STAGE | CPORT | NPORT | PARAM | Value | MUNIT | Final_value | Final_MUNIT | SMTYP | SAREA | METOA | MAGNI | FLVOL | CLMET | SMVOL | METFP | QFLAG | VFLAG | FINFL | REFSK | DCFLGs | tblUploadID | tblSpotID | tblSampleID | tblParamID |
+|:---|:---|:---|:---|:---|:---|---:|:---|---:|---:|---:|---:|:---|:---|:---|:---|:---|:---|:---|---:|:---|---:|:---|---:|:---|:---|:---|:---|:---|:---|:---|:---|:---|---:|:---|---:|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|---:|---:|---:|---:|
+| France | IGA_Gravelines_2024 | BOREA20240111 | BOREA20240111 | CEMP~NATL | T~S | 2024 | 11/01/2024 | 2.15003 | 51.02219 | 2 | 5 | GRAV - Canal Amenee | NA | NA | BAMN | BAMN | BAMN | ERID | 883 | Polychaeta | 883 | Polychaeta | 883 | Polychaeta | NA | NA | NA | NA | NA | NA | NA | ABUNDNR | 0.50 | nr/m3 | 0.50 | nr/m3 | NA | NA | NA | NA | NA | NA | NA | NA | NA | A | NA | NA | 00-CONV-SF | 13547 | 862528 | 5731088 | 73659265 |
+| France | IGA_Gravelines_2024 | BOREA20240111 | BOREA20240111 | CEMP~NATL | T~S | 2024 | 11/01/2024 | 2.15003 | 51.02219 | 2 | 5 | GRAV - Canal Amenee | NA | NA | BAMN | BAMN | BAMN | ERID | 1078 | Ostracoda | 1078 | Ostracoda | 1078 | Ostracoda | NA | NA | NA | NA | NA | NA | NA | ABUNDNR | 0.50 | nr/m3 | 0.50 | nr/m3 | NA | NA | NA | NA | NA | NA | NA | NA | NA | A | NA | NA | 00-CONV-SF | 13547 | 862528 | 5731088 | 73659266 |
+| France | IGA_Gravelines_2024 | BOREA20240111 | BOREA20240111 | CEMP~NATL | T~S | 2024 | 11/01/2024 | 2.15003 | 51.02219 | 2 | 5 | GRAV - Canal Amenee | NA | NA | BAMN | BAMN | BAMN | ERID | 1080 | Copepoda | 1080 | Copepoda | 1080 | Copepoda | NA | NA | NA | NA | NA | NA | NA | ABUNDNR | 0.76 | nr/m3 | 0.76 | nr/m3 | NA | NA | NA | NA | NA | NA | NA | NA | NA | A | NA | NA | 00-CONV-SF | 13547 | 862528 | 5731088 | 73659267 |
+| France | IGA_Gravelines_2024 | BOREA20240111 | BOREA20240111 | CEMP~NATL | T~S | 2024 | 11/01/2024 | 2.15003 | 51.02219 | 2 | 5 | GRAV - Canal Amenee | NA | NA | BAMN | BAMN | BAMN | ERID | 1082 | Cirripedia | 1082 | Cirripedia | 1082 | Cirripedia | NA | NA | NA | NA | NA | NA | NA | ABUNDNR | 2.02 | nr/m3 | 2.02 | nr/m3 | NA | NA | NA | NA | NA | NA | NA | NA | NA | A | NA | NA | 00-CONV-SF | 13547 | 862528 | 5731088 | 73659268 |
+| France | IGA_Gravelines_2024 | BOREA20240111 | BOREA20240111 | CEMP~NATL | T~S | 2024 | 11/01/2024 | 2.15003 | 51.02219 | 2 | 5 | GRAV - Canal Amenee | NA | NA | BAMN | BAMN | BAMN | ERID | 1131 | Isopoda | 1131 | Isopoda | 1131 | Isopoda | NA | NA | NA | NA | NA | NA | NA | ABUNDNR | 4.04 | nr/m3 | 4.04 | nr/m3 | NA | NA | NA | NA | NA | NA | NA | NA | NA | A | NA | NA | 00-CONV-SF | 13547 | 862528 | 5731088 | 73659269 |
+| France | IGA_Gravelines_2024 | BOREA20240111 | BOREA20240111 | CEMP~NATL | T~S | 2024 | 11/01/2024 | 2.15003 | 51.02219 | 2 | 5 | GRAV - Canal Amenee | NA | NA | BAMN | BAMN | BAMN | ERID | 1137 | Cumacea | 1137 | Cumacea | 1137 | Cumacea | NA | NA | NA | NA | NA | NA | NA | ABUNDNR | 0.76 | nr/m3 | 0.76 | nr/m3 | NA | NA | NA | NA | NA | NA | NA | NA | NA | A | NA | NA | 00-CONV-SF | 13547 | 862528 | 5731088 | 73659270 |
 
 We can select relevant variables and change their names to something
 more informative.
@@ -65,21 +60,24 @@ more informative.
 ``` r
 clean_plankton_variables <- function(plankton_data) {
   plankton_data |>
-    select(SDATE, SMPNO, SPECI, MUNIT, VFLAG, VALUE) |>
+    select(DATE, AphiaID, WoRMS_name, MUNIT, VFLAG, final_value) |>
     rename(
-      date = SDATE,
-      sample_no = SMPNO,
-      taxo_id = SPECI,
+      date = DATE,
+      taxo_id = AphiaID,
+      worms_name = WoRMS_name,
       unit = MUNIT,
       quality_flag = VFLAG,
-      abundance = VALUE
+      abundance = final_value
     ) |>
-    mutate(date = as.Date(as.character(date), format = "%Y%m%d"))
+    mutate(date = as.Date(as.character(date), format = "%d/%m/%Y"))
 }
 ```
 
 ``` r
-zooplankton_data <- clean_plankton_variables(zooplankton_data)
+zooplankton_data <- zooplankton_data |>
+  rename(final_value = Final_value) |>
+  clean_plankton_variables()
+
 phytoplankton_data <- clean_plankton_variables(phytoplankton_data)
 ```
 
@@ -87,14 +85,14 @@ phytoplankton_data <- clean_plankton_variables(phytoplankton_data)
 head(zooplankton_data)
 ```
 
-| date       | sample_no | taxo_id | unit  | quality_flag | abundance |
-|:-----------|:----------|--------:|:------|:-------------|----------:|
-| 1998-01-07 | 5198701   |     101 | nr/m3 | S            |  25.06964 |
-| 1998-01-07 | 5198701   |     882 | nr/m3 | S            |  16.71309 |
-| 1998-01-07 | 5198701   |     913 | nr/m3 | S            | 214.48468 |
-| 1998-01-07 | 5198701   |    1082 | nr/m3 | S            |  25.06964 |
-| 1998-01-07 | 5198701   |    1101 | nr/m3 | S            |  97.49304 |
-| 1998-01-07 | 5198701   |    1102 | nr/m3 | S            |  13.92758 |
+| date       | taxo_id | worms_name | unit  | quality_flag | abundance |
+|:-----------|--------:|:-----------|:------|:-------------|----------:|
+| 2024-01-11 |     883 | Polychaeta | nr/m3 | A            |      0.50 |
+| 2024-01-11 |    1078 | Ostracoda  | nr/m3 | A            |      0.50 |
+| 2024-01-11 |    1080 | Copepoda   | nr/m3 | A            |      0.76 |
+| 2024-01-11 |    1082 | Cirripedia | nr/m3 | A            |      2.02 |
+| 2024-01-11 |    1131 | Isopoda    | nr/m3 | A            |      4.04 |
+| 2024-01-11 |    1137 | Cumacea    | nr/m3 | A            |      0.76 |
 
 # Export data
 

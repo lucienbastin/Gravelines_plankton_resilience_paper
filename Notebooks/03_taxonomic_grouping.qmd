@@ -32,8 +32,8 @@ conflicted::conflicts_prefer(
 ## Data
 
 ```{r}
-zooplankton_data <- read.csv(here("Data/Temp/zoo_with_taxo.csv"))
-phytoplankton_data <- read.csv(here("Data/Temp/phyto_with_taxo.csv"))
+zooplankton_data <- read.csv(here("Data/Temp/zoo_clean.csv"))
+phytoplankton_data <- read.csv(here("Data/Temp/phyto_clean.csv"))
 ```
 
 ```{r}
@@ -81,47 +81,19 @@ head(zooplankton_superior_groups)
 
 # Display timeseries of abundance for each taxa in their groups
 
-Add a column with the best available taxonomic information
-
-```{r}
-zooplankton_data <- zooplankton_data |>
-  rowwise() |>
-  mutate(
-    best_taxo = {
-      vals <- c_across(Kingdom:Species)
-      non_na_vals <- vals[!is.na(vals)]
-      if (length(non_na_vals) == 0) NA else tail(non_na_vals, 1)
-    }
-  )
-
-phytoplankton_data <- phytoplankton_data |>
-  rowwise() |>
-  mutate(
-    best_taxo = {
-      vals <- c_across(Kingdom:Species)
-      non_na_vals <- vals[!is.na(vals)]
-      if (length(non_na_vals) == 0) NA else tail(non_na_vals, 1)
-    }
-  )
-```
-
-```{r}
-head(zooplankton_data)
-```
-
 Compute mean abundance per month for each taxa
 
 ```{r}
 zooplankton_data_monthly <- zooplankton_data |>
   mutate(year = year(date), month = month(date)) |>
-  group_by(year, month, best_taxo, superior_group) |>
+  group_by(year, month, worms_name, superior_group) |>
   summarize(across(abundance, mean)) |>
   ungroup() |>
   mutate(date = ymd(paste(year, month, "01")))
 
 phytoplankton_data_monthly <- phytoplankton_data |>
   mutate(year = year(date), month = month(date)) |>
-  group_by(year, month, best_taxo, superior_group) |>
+  group_by(year, month, worms_name, superior_group) |>
   summarize(across(abundance, mean)) |>
   ungroup() |>
   mutate(date = ymd(paste(year, month, "01")))
@@ -145,7 +117,7 @@ plot_plankton_grouping <- function(
       superior_group %in% all_superior_groups$groups[first_group:last_group]
     )
 
-  ggplot(data, aes(x = date, y = best_taxo)) +
+  ggplot(data, aes(x = date, y = worms_name)) +
     geom_tile(aes(fill = log1p(abundance), color = log1p(abundance))) +
     facet_wrap(
       vars(superior_group),
