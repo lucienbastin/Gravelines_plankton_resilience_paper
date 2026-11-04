@@ -105,9 +105,8 @@ compute_monthly_means <- function(data) {
     )
 
   data_wide |>
-    # select(-date) |>
-    # decostand("hellinger") |>
-    # mutate(date = data_wide$date) |>
+    select(order(colnames(data_wide))) |> # Order the species columns alphabetically
+    select(date, everything()) |>
     group_by(
       year = year(date),
       month = month(date)

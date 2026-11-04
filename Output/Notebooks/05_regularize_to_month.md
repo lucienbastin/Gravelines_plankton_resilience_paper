@@ -1,6 +1,6 @@
 # Regularize all datasets to have a monthly temporal resolution
 Lucien Bastin
-2026-11-03
+2026-11-04
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -150,9 +150,8 @@ compute_monthly_means <- function(data) {
     )
 
   data_wide |>
-    # select(-date) |>
-    # decostand("hellinger") |>
-    # mutate(date = data_wide$date) |>
+    select(order(colnames(data_wide))) |> # Order the species columns alphabetically
+    select(date, everything()) |>
     group_by(
       year = year(date),
       month = month(date)
@@ -171,14 +170,14 @@ phytoplankton_monthly_mean <- compute_monthly_means(phytoplankton_data)
 head(zooplankton_monthly_mean)
 ```
 
-| year | month | Acartiidae | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Cyclopoida | Decapod_larva | Euterpina | Gasteropod_larva | Oikopleura | Paracalanus | Polychaete_larva | Pseudocalanus | Temora | Jellyfish | Pleurobrachia | Bivalvia_larva | Echinoderm_larva | Large_Ctenophora | Labidocera | Corycaeidae | Ascidiacea | Clausidiidae | Cyclopinoides | Stephos | Copepoda | Siphonostomatoida | Monstrilloida | Branchiopoda | Parapontella | Oithona | Doliolum | Isias | Fritillaria | Oncaeidae | Ostracoda | Fish_larva | Longipedia | Eurytemora | Pseudodiaptomus | Harpacticus | Platycopia |
+| year | month | Acartiidae | Ascidiacea | Bivalvia_larva | Branchiopoda | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Clausidiidae | Copepoda | Corycaeidae | Cyclopinoides | Cyclopoida | Decapod_larva | Doliolum | Echinoderm_larva | Eurytemora | Euterpina | Fish_larva | Fritillaria | Gasteropod_larva | Harpacticus | Isias | Jellyfish | Labidocera | Large_Ctenophora | Longipedia | Monstrilloida | Oikopleura | Oithona | Oncaeidae | Ostracoda | Paracalanus | Parapontella | Platycopia | Pleurobrachia | Polychaete_larva | Pseudocalanus | Pseudodiaptomus | Siphonostomatoida | Stephos | Temora |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1998 | 1 | 15.04 | 0.56 | 0.28 | 4.46 | 0.28 | 2.51 | 9.75 | 0.28 | 14.48 | 2.51 | 7.24 | 3.34 | 23.40 | 11.98 | 26.18 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998 | 2 | 12.22 | 0.37 | 0.37 | 2.59 | 0.00 | 801.85 | 1.48 | 0.37 | 0.37 | 0.00 | 11.48 | 0.37 | 15.93 | 5.56 | 22.22 | 1.11 | 0.37 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998 | 4 | 13.51 | 0.00 | 0.44 | 1.74 | 0.00 | 0.88 | 0.65 | 0.65 | 1.31 | 0.87 | 9.15 | 0.44 | 15.69 | 3.49 | 28.10 | 0.66 | 0.54 | 1.09 | 1.96 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998 | 5 | 94.58 | 0.00 | 1.15 | 56.52 | 0.00 | 3.46 | 1.15 | 1.16 | 2.31 | 0.00 | 99.19 | 2.31 | 12.68 | 28.84 | 628.60 | 1.61 | 4.27 | 1.15 | 89.97 | 0.35 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998 | 6 | 200.90 | 0.00 | 1.50 | 16.49 | 0.30 | 11.99 | 0.45 | 1.65 | 17.99 | 6.00 | 9.00 | 0.00 | 50.97 | 308.85 | 278.86 | 64.62 | 1.65 | 0.00 | 16.49 | 0.15 | 0.15 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998 | 7 | 521.14 | 0.11 | 0.00 | 1.71 | 0.34 | 4.57 | 0.00 | 0.67 | 13.94 | 0.69 | 2.97 | 0.11 | 12.91 | 0.11 | 8.91 | 0.34 | 0.00 | 0.11 | 0.00 | 0.23 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998 | 1 | 15.04 | 0 | 0.00 | 0 | 0.56 | 0.28 | 4.46 | 0.28 | 2.51 | 0 | 0 | 0 | 0 | 9.75 | 0.28 | 0 | 0.00 | 0 | 14.48 | 0 | 0 | 2.51 | 0 | 0 | 0.00 | 0.00 | 0.00 | 0 | 0 | 7.24 | 0 | 0 | 0 | 3.34 | 0 | 0 | 0.00 | 23.40 | 11.98 | 0 | 0 | 0 | 26.18 |
+| 1998 | 2 | 12.22 | 0 | 0.00 | 0 | 0.37 | 0.37 | 2.59 | 0.00 | 801.85 | 0 | 0 | 0 | 0 | 1.48 | 0.37 | 0 | 0.00 | 0 | 0.37 | 0 | 0 | 0.00 | 0 | 0 | 1.11 | 0.00 | 0.00 | 0 | 0 | 11.48 | 0 | 0 | 0 | 0.37 | 0 | 0 | 0.37 | 15.93 | 5.56 | 0 | 0 | 0 | 22.22 |
+| 1998 | 4 | 13.51 | 0 | 1.09 | 0 | 0.00 | 0.44 | 1.74 | 0.00 | 0.88 | 0 | 0 | 0 | 0 | 0.65 | 0.65 | 0 | 1.96 | 0 | 1.31 | 0 | 0 | 0.87 | 0 | 0 | 0.66 | 0.00 | 0.00 | 0 | 0 | 9.15 | 0 | 0 | 0 | 0.44 | 0 | 0 | 0.54 | 15.69 | 3.49 | 0 | 0 | 0 | 28.10 |
+| 1998 | 5 | 94.58 | 0 | 1.15 | 0 | 0.00 | 1.15 | 56.52 | 0.00 | 3.46 | 0 | 0 | 0 | 0 | 1.15 | 1.16 | 0 | 89.97 | 0 | 2.31 | 0 | 0 | 0.00 | 0 | 0 | 1.61 | 0.00 | 0.35 | 0 | 0 | 99.19 | 0 | 0 | 0 | 2.31 | 0 | 0 | 4.27 | 12.68 | 28.84 | 0 | 0 | 0 | 628.60 |
+| 1998 | 6 | 200.90 | 0 | 0.00 | 0 | 0.00 | 1.50 | 16.49 | 0.30 | 11.99 | 0 | 0 | 0 | 0 | 0.45 | 1.65 | 0 | 16.49 | 0 | 17.99 | 0 | 0 | 6.00 | 0 | 0 | 64.62 | 0.15 | 0.15 | 0 | 0 | 9.00 | 0 | 0 | 0 | 0.00 | 0 | 0 | 1.65 | 50.97 | 308.85 | 0 | 0 | 0 | 278.86 |
+| 1998 | 7 | 521.14 | 0 | 0.11 | 0 | 0.11 | 0.00 | 1.71 | 0.34 | 4.57 | 0 | 0 | 0 | 0 | 0.00 | 0.67 | 0 | 0.00 | 0 | 13.94 | 0 | 0 | 0.69 | 0 | 0 | 0.34 | 0.00 | 0.23 | 0 | 0 | 2.97 | 0 | 0 | 0 | 0.11 | 0 | 0 | 0.00 | 12.91 | 0.11 | 0 | 0 | 0 | 8.91 |
 
 # Impute missing values
 
@@ -228,14 +227,14 @@ phytoplankton_regularized <- regularize_monthly(phytoplankton_monthly_mean)
 head(zooplankton_regularized)
 ```
 
-| date | Acartiidae | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Cyclopoida | Decapod_larva | Euterpina | Gasteropod_larva | Oikopleura | Paracalanus | Polychaete_larva | Pseudocalanus | Temora | Jellyfish | Pleurobrachia | Bivalvia_larva | Echinoderm_larva | Large_Ctenophora | Labidocera | Corycaeidae | Ascidiacea | Clausidiidae | Cyclopinoides | Stephos | Copepoda | Siphonostomatoida | Monstrilloida | Branchiopoda | Parapontella | Oithona | Doliolum | Isias | Fritillaria | Oncaeidae | Ostracoda | Fish_larva | Longipedia | Eurytemora | Pseudodiaptomus | Harpacticus | Platycopia |
+| date | Acartiidae | Ascidiacea | Bivalvia_larva | Branchiopoda | Bryozoan_larva | Calanus | Centropages | Chaetognatha | Cirriped_larva | Clausidiidae | Copepoda | Corycaeidae | Cyclopinoides | Cyclopoida | Decapod_larva | Doliolum | Echinoderm_larva | Eurytemora | Euterpina | Fish_larva | Fritillaria | Gasteropod_larva | Harpacticus | Isias | Jellyfish | Labidocera | Large_Ctenophora | Longipedia | Monstrilloida | Oikopleura | Oithona | Oncaeidae | Ostracoda | Paracalanus | Parapontella | Platycopia | Pleurobrachia | Polychaete_larva | Pseudocalanus | Pseudodiaptomus | Siphonostomatoida | Stephos | Temora |
 |:---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1998-01-01 | 15.04 | 0.56 | 0.28 | 4.46 | 0.28 | 2.51 | 9.75 | 0.28 | 14.48 | 2.51 | 7.24 | 3.34 | 23.40 | 11.98 | 26.18 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998-02-01 | 12.22 | 0.37 | 0.37 | 2.59 | 0.00 | 801.85 | 1.48 | 0.37 | 0.37 | 0.00 | 11.48 | 0.37 | 15.93 | 5.56 | 22.22 | 1.11 | 0.37 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998-03-01 | 12.22 | 0.37 | 0.37 | 2.59 | 0.00 | 801.85 | 1.48 | 0.37 | 0.37 | 0.00 | 11.48 | 0.37 | 15.93 | 5.56 | 22.22 | 1.11 | 0.37 | 0.00 | 0.00 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998-04-01 | 13.51 | 0.00 | 0.44 | 1.74 | 0.00 | 0.88 | 0.65 | 0.65 | 1.31 | 0.87 | 9.15 | 0.44 | 15.69 | 3.49 | 28.10 | 0.66 | 0.54 | 1.09 | 1.96 | 0.00 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998-05-01 | 94.58 | 0.00 | 1.15 | 56.52 | 0.00 | 3.46 | 1.15 | 1.16 | 2.31 | 0.00 | 99.19 | 2.31 | 12.68 | 28.84 | 628.60 | 1.61 | 4.27 | 1.15 | 89.97 | 0.35 | 0.00 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1998-06-01 | 200.90 | 0.00 | 1.50 | 16.49 | 0.30 | 11.99 | 0.45 | 1.65 | 17.99 | 6.00 | 9.00 | 0.00 | 50.97 | 308.85 | 278.86 | 64.62 | 1.65 | 0.00 | 16.49 | 0.15 | 0.15 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1998-01-01 | 15.04 | 0 | 0.00 | 0 | 0.56 | 0.28 | 4.46 | 0.28 | 2.51 | 0 | 0 | 0 | 0 | 9.75 | 0.28 | 0 | 0.00 | 0 | 14.48 | 0 | 0 | 2.51 | 0 | 0 | 0.00 | 0.00 | 0.00 | 0 | 0 | 7.24 | 0 | 0 | 0 | 3.34 | 0 | 0 | 0.00 | 23.40 | 11.98 | 0 | 0 | 0 | 26.18 |
+| 1998-02-01 | 12.22 | 0 | 0.00 | 0 | 0.37 | 0.37 | 2.59 | 0.00 | 801.85 | 0 | 0 | 0 | 0 | 1.48 | 0.37 | 0 | 0.00 | 0 | 0.37 | 0 | 0 | 0.00 | 0 | 0 | 1.11 | 0.00 | 0.00 | 0 | 0 | 11.48 | 0 | 0 | 0 | 0.37 | 0 | 0 | 0.37 | 15.93 | 5.56 | 0 | 0 | 0 | 22.22 |
+| 1998-03-01 | 12.22 | 0 | 0.00 | 0 | 0.37 | 0.37 | 2.59 | 0.00 | 801.85 | 0 | 0 | 0 | 0 | 1.48 | 0.37 | 0 | 0.00 | 0 | 0.37 | 0 | 0 | 0.00 | 0 | 0 | 1.11 | 0.00 | 0.00 | 0 | 0 | 11.48 | 0 | 0 | 0 | 0.37 | 0 | 0 | 0.37 | 15.93 | 5.56 | 0 | 0 | 0 | 22.22 |
+| 1998-04-01 | 13.51 | 0 | 1.09 | 0 | 0.00 | 0.44 | 1.74 | 0.00 | 0.88 | 0 | 0 | 0 | 0 | 0.65 | 0.65 | 0 | 1.96 | 0 | 1.31 | 0 | 0 | 0.87 | 0 | 0 | 0.66 | 0.00 | 0.00 | 0 | 0 | 9.15 | 0 | 0 | 0 | 0.44 | 0 | 0 | 0.54 | 15.69 | 3.49 | 0 | 0 | 0 | 28.10 |
+| 1998-05-01 | 94.58 | 0 | 1.15 | 0 | 0.00 | 1.15 | 56.52 | 0.00 | 3.46 | 0 | 0 | 0 | 0 | 1.15 | 1.16 | 0 | 89.97 | 0 | 2.31 | 0 | 0 | 0.00 | 0 | 0 | 1.61 | 0.00 | 0.35 | 0 | 0 | 99.19 | 0 | 0 | 0 | 2.31 | 0 | 0 | 4.27 | 12.68 | 28.84 | 0 | 0 | 0 | 628.60 |
+| 1998-06-01 | 200.90 | 0 | 0.00 | 0 | 0.00 | 1.50 | 16.49 | 0.30 | 11.99 | 0 | 0 | 0 | 0 | 0.45 | 1.65 | 0 | 16.49 | 0 | 17.99 | 0 | 0 | 6.00 | 0 | 0 | 64.62 | 0.15 | 0.15 | 0 | 0 | 9.00 | 0 | 0 | 0 | 0.00 | 0 | 0 | 1.65 | 50.97 | 308.85 | 0 | 0 | 0 | 278.86 |
 
 # Export data
 
