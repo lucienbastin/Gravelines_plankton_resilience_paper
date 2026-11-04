@@ -1,12 +1,13 @@
 # Filter out plankton datasets
 Lucien Bastin
-2026-11-03
+2026-11-04
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
   - [Data](#data)
-- [Filter out samples (dates) with too many bad quality flags (S
-  flags)](#filter-out-samples-dates-with-too-many-bad-quality-flags-s-flags)
+- [Filter out samples (dates) with more than a certain amount of bad
+  quality flags (S
+  flags)](#filter-out-samples-dates-with-more-than-a-certain-amount-of-bad-quality-flags-s-flags)
 - [Filter out samples (dates) that contain only fish and decapod
   larvae](#filter-out-samples-dates-that-contain-only-fish-and-decapod-larvae)
 - [Filter out superior groups that should be
@@ -45,17 +46,40 @@ zooplankton_data <- read.csv(here("Data/Temp/zoo_grouped.csv"))
 phytoplankton_data <- read.csv(here("Data/Temp/phyto_grouped.csv"))
 ```
 
-# Filter out samples (dates) with too many bad quality flags (S flags)
+# Filter out samples (dates) with more than a certain amount of bad quality flags (S flags)
+
+S flags indicate that the recorded abundance of an organism (here, our
+superior groups) in a sample may be inaccurate.
+
+``` r
+head(zooplankton_data)
+```
+
+| date       | superior_group | quality_flag |   abundance |
+|:-----------|:---------------|:-------------|------------:|
+| 1998-01-07 | Acartiidae     | S            | 150.4178273 |
+| 1998-01-07 | Bryozoan_larva | S            |   5.5710306 |
+| 1998-01-07 | Calanus        | S            |   2.7855153 |
+| 1998-01-07 | Centropages    | A            |   0.1740947 |
+| 1998-01-07 | Chaetognatha   | S            |   2.7855153 |
+| 1998-01-07 | Cirriped_larva | S            |  25.0696379 |
+
+The more S quality flags there are in a sample, the more we can question
+the quality of the sample as a whole.
+
+The following function discards samples where the percentage of S flags
+exceeds a certain threshold.
 
 N.B. sometimes there are both good and bad quality flags for the same
-organism in the same sample, so we compute the total (sum) abundance of
-the organism in that case.
+group in the same sample (because of the taxonomic grouping), so we
+simplify by computing the total (sum) abundance of the group in that
+case (if we keep the sample).
 
 ``` r
 filter_bad_quality <- function(plankton_data, quality_threshold) {
   plankton_data |>
     group_by(date) |>
-    filter((sum(quality_flag == "S") / n()) < quality_threshold) |>
+    filter((sum(quality_flag == "S") / n()) <= quality_threshold) |>
     select(-quality_flag) |>
     group_by(date, superior_group) |>
     summarize(across(abundance, sum)) |>
@@ -63,12 +87,30 @@ filter_bad_quality <- function(plankton_data, quality_threshold) {
 }
 ```
 
+Here we use a threshold of zero to remove all samples where there is at
+least one bad quality flag (but it would also be possible to use a less
+strict threshold such as 0.1 or 0.5 for instance).
+
 ``` r
-zooplankton_data <- filter_bad_quality(zooplankton_data, 0.9)
-phytoplankton_data <- filter_bad_quality(phytoplankton_data, 0.9)
+zooplankton_data <- filter_bad_quality(zooplankton_data, 0)
+phytoplankton_data <- filter_bad_quality(phytoplankton_data, 0)
 ```
 
 # Filter out samples (dates) that contain only fish and decapod larvae
+
+``` r
+zooplankton_data |>
+  filter(date == as.Date("2024-04-08"))
+```
+
+| date       | superior_group | abundance |
+|:-----------|:---------------|----------:|
+| 2024-04-08 | Decapod_larva  | 0.1368518 |
+| 2024-04-08 | Fish_larva     | 1.3806606 |
+
+Some zooplankton samples such as this one only contain fish larvae and
+decapod larvae, so we can confidently remove them (they were likely not
+supposed to be a part of this dataset).
 
 ``` r
 filter_fish_samples <- function(plankton_data) {
@@ -81,7 +123,6 @@ filter_fish_samples <- function(plankton_data) {
 
 ``` r
 zooplankton_data <- filter_fish_samples(zooplankton_data)
-phytoplankton_data <- filter_fish_samples(phytoplankton_data)
 ```
 
 # Filter out superior groups that should be removed
