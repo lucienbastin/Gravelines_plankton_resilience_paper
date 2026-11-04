@@ -37,7 +37,7 @@ phytoplankton_data$date = as.Date(phytoplankton_data$date)
 
 The deseasonalization method used here is a moving average : all variables are meaned within a moving window of 12 months that slides across the whole timeseries.
 
-The method is called "asymmetric" because for each month, it takes a takes in a different number of months before and after in the window (for instance, 5 months before + the current month + 6 months after = 12 months total).
+The method is called "asymmetric" because for each month, it takes a takes in a different number of months before and after in the window (for instance, 6 months before + the current month + 5 months after = 12 months in total).
 
 ```{r}
 asymmetric_moving_average <- function(x, n_left, n_right) {
