@@ -1,0 +1,268 @@
+---
+title: Identify seasonal clusters in the plankton timeseries
+author: Lucien Bastin
+date: today
+---
+
+# Libraries and data
+
+## Libraries
+
+```{r}
+library(adespatial)
+library(conflicted)
+library(dendextend)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(here)
+library(hues)
+library(lubridate)
+library(vegan)
+```
+
+```{r}
+#| warning: true
+
+conflicted::conflict_scout()
+```
+
+```{r}
+conflicted::conflicts_prefer(dplyr::filter())
+```
+
+## Functions
+
+```{r}
+source(here("R/extract_pca_data.R"))
+```
+
+## Data
+
+```{r}
+zooplankton_data <- read.csv(here("Data/Temp/zoo_regularized.csv"))
+```
+
+# Prepare data
+
+```{r}
+zooplankton_data_log <- zooplankton_data |>
+  mutate(across(-date, log1p)) |>
+  select(-date) |>
+  decostand("hellinger") |>
+  mutate(date = zooplankton_data$date, .before = everything())
+```
+
+# Compute links matrix
+
+```{r}
+dates_links <- zooplankton_data |>
+  mutate(origin = row_number(), target = lead(origin, 1)) |>
+  select(origin, target) |>
+  na.omit()
+
+months_links <- zooplankton_data |>
+  mutate(date_n = row_number()) |>
+  group_by(month = month(date)) |>
+  arrange(month) |>
+  mutate(origin = date_n, target = lead(date_n, 1)) |>
+  ungroup() |>
+  na.omit() |>
+  select(origin, target)
+
+links <- rbind(dates_links, months_links)
+```
+
+# Perform clustering
+
+```{r}
+clust <- constr.hclust(dist(zooplankton_data_log), links = links)
+plot(clust)
+```
+
+```{r}
+n_clusters <- 6
+```
+
+```{r}
+dend <- as.dendrogram(clust)
+zoo_dend_clusters <- cutree(clust, k = n_clusters)[order.dendrogram(dend)]
+
+zoo_season_dendro <- dend |>
+  color_branches(
+    clusters = zoo_dend_clusters,
+    col = iwanthue(n_clusters)[unique(zoo_dend_clusters)]
+  ) |>
+  as.ggdend() |>
+  ggplot(labels = FALSE) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(y = "Hauteur") +
+  theme_classic() +
+  theme(
+    axis.line.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank()
+  )
+
+zoo_season_dendro
+```
+
+```{r}
+clustering <- cutree(clust, k = n_clusters)
+zooplankton_season_pal <- iwanthue(n_clusters)
+```
+
+```{r}
+zoo_cluster_plot <- ggplot(
+  zooplankton_data_log,
+  aes(
+    x = year(date),
+    y = month(date, label = TRUE, locale = "fr_FR.utf8"),
+    fill = as.factor(clustering),
+    color = as.factor(clustering)
+  )
+) +
+  geom_tile() +
+  scale_x_continuous(
+    expand = c(0, 0),
+    breaks = unique(year(zooplankton_data_log$date))[c(TRUE, FALSE)]
+  ) +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_fill_manual(
+    values = zooplankton_season_pal,
+    labels = c("Printemps 1", "Été-automne", "Hiver", "Printemps 2")
+  ) +
+  scale_color_manual(values = zooplankton_season_pal) +
+  labs(x = "Année", y = "Mois", fill = "Cluster saisonnier") +
+  guides(color = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 60, vjust = 0.5))
+
+zoo_cluster_plot
+```
+
+# Seasonal PCA
+
+```{r}
+project_points_on_PCA <- function(points, clusters, pca) {
+  newpoints_scaled <- points |>
+    mutate(across(
+      everything(),
+      ~ . - colMeans(clusters)[cur_column()]
+    ))
+
+  newpoints_projected <- as.data.frame(as.matrix(newpoints_scaled) %*% pca$CA$v)
+}
+```
+
+```{r}
+zoo_clusters <- zooplankton_data_log |>
+  group_by(cluster = clustering) |>
+  summarize(across(-date, mean)) |>
+  select(-cluster)
+```
+
+```{r}
+zoo_seasonal_pca <- zoo_clusters |>
+  rda()
+```
+
+```{r}
+pca_data <- zoo_seasonal_pca |>
+  extract_pca_data()
+
+centroids <- pca_data$sites_scores
+```
+
+```{r}
+projected_points <- project_points_on_PCA(
+  zooplankton_data_log[-1],
+  zoo_clusters,
+  zoo_seasonal_pca
+) |>
+  mutate(cluster = clustering)
+```
+
+```{r}
+plot_seasonal_PCA <- function(
+  projected_points,
+  centroids,
+  pca_data,
+  palette,
+  tresh = 0
+) {
+  ggplot() +
+    geom_point(
+      data = projected_points,
+      aes(x = PC1, y = PC2, color = as.character(cluster)),
+      alpha = 0.3
+    ) +
+    geom_point(
+      data = centroids,
+      aes(
+        x = PC1,
+        y = PC2,
+        fill = sites
+      ),
+      color = "black",
+      shape = 24,
+      size = 4
+    ) +
+    stat_ellipse(
+      data = projected_points,
+      aes(
+        x = PC1,
+        y = PC2,
+        color = as.character(cluster)
+      )
+    ) +
+    geom_segment(
+      data = pca_data$species_scores |> filter(sqrt(PC1**2 + PC2**2) > tresh),
+      aes(x = 0, xend = PC1 * 2, y = 0, yend = PC2 * 2),
+      arrow = arrow(length = unit(.15, 'cm'))
+    ) +
+    geom_label_repel(
+      data = pca_data$species_scores |> filter(sqrt(PC1**2 + PC2**2) > tresh),
+      aes(x = PC1 * 2, y = PC2 * 2, label = species),
+      max.overlaps = 10,
+      size = 3
+    ) +
+    scale_color_manual(values = palette) +
+    scale_fill_manual(values = palette) +
+    scale_shape_manual(values = c(21, 22, 24)) +
+    labs(
+      x = paste0("PC1 (", pca_data$percent_var[1], " %)"),
+      y = paste0("PC2 (", pca_data$percent_var[2], " %)"),
+      color = "Cluster saisonnier"
+    ) +
+    coord_fixed() +
+    theme_bw() +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
+    )
+}
+```
+
+```{r}
+zoo_pca_season <- plot_seasonal_PCA(
+  projected_points,
+  centroids,
+  pca_data,
+  zooplankton_season_pal,
+  0.07
+)
+```
+
+```{r}
+zoo_pca_season
+```
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+
+Document rendered using Quarto version {{< version >}}.
