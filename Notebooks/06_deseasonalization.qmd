@@ -33,6 +33,10 @@ zooplankton_data$date = as.Date(zooplankton_data$date)
 phytoplankton_data$date = as.Date(phytoplankton_data$date)
 ```
 
+```{r}
+environmental_data <- read.csv(here("Data/Temp/environmental_data.csv"))
+```
+
 # Asymmetric moving average
 
 The deseasonalization method used here is a moving average : all variables are meaned within a moving window of 12 months that slides across the whole timeseries.
@@ -54,6 +58,8 @@ asymmetric_moving_average <- function(x, n_left, n_right) {
 }
 ```
 
+Since the asymmetric moving average relies on the mean function, it is sensitive to changes in total plankton abundances between months. As we are only interested in th changes in community composition, we transform the plankton abundances using the Hellinger transformation before applying the moving window.
+
 ```{r}
 zooplankton_deseasonalized <- zooplankton_data |>
   select(-date) |>
@@ -73,6 +79,17 @@ phytoplankton_deseasonalized <- phytoplankton_data |>
 head(zooplankton_deseasonalized, n = 10)
 ```
 
+Environmental data is also deseasonalized
+
+```{r}
+environmental_data_deseasonalized <- environmental_data |>
+  mutate(across(-date, ~ asymmetric_moving_average(., 6, 5)))
+```
+
+```{r}
+head(environmental_data_deseasonalized, n = 10)
+```
+
 We can remove the missing values left over by the moving window
 
 ```{r}
@@ -80,6 +97,9 @@ zooplankton_deseasonalized <- zooplankton_deseasonalized |>
   na.omit()
 
 phytoplankton_deseasonalized <- phytoplankton_deseasonalized |>
+  na.omit()
+
+environmental_data_deseasonalized <- environmental_data_deseasonalized |>
   na.omit()
 ```
 
@@ -95,6 +115,12 @@ write.csv(
 write.csv(
   phytoplankton_deseasonalized,
   here("Data/Temp/phyto_deseasonalized.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  environmental_data_deseasonalized,
+  here("Data/Temp/env_deseasonalized.csv"),
   row.names = FALSE
 )
 ```

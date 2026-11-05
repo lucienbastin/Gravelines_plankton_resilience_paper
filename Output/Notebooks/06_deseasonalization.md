@@ -1,6 +1,6 @@
 # Deseasonalize timeseries to focus on long-term changes
 Lucien Bastin
-2026-11-04
+2026-11-05
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -42,6 +42,10 @@ zooplankton_data$date = as.Date(zooplankton_data$date)
 phytoplankton_data$date = as.Date(phytoplankton_data$date)
 ```
 
+``` r
+environmental_data <- read.csv(here("Data/Temp/environmental_data.csv"))
+```
+
 # Asymmetric moving average
 
 The deseasonalization method used here is a moving average : all
@@ -67,6 +71,12 @@ asymmetric_moving_average <- function(x, n_left, n_right) {
   c(out, rep(NA, n_right))
 }
 ```
+
+Since the asymmetric moving average relies on the mean function, it is
+sensitive to changes in total plankton abundances between months. As we
+are only interested in th changes in community composition, we transform
+the plankton abundances using the Hellinger transformation before
+applying the moving window.
 
 ``` r
 zooplankton_deseasonalized <- zooplankton_data |>
@@ -100,6 +110,30 @@ head(zooplankton_deseasonalized, n = 10)
 | 1998-09-01 | 0.4708057 | 0.0098778 | 0.0287310 | 0 | 0.0566808 | 0.0260417 | 0.2016802 | 0.0774102 | 0.2076391 | 0.0557106 | 0 | 0.0401230 | 0.0104899 | 0.0398305 | 0.0496950 | 0 | 0.0598032 | 0 | 0.3182423 | 0 | 0 | 0.0639442 | 0 | 0 | 0.0443833 | 0.0010268 | 0.0042391 | 0 | 0 | 0.1644739 | 0 | 0 | 0 | 0.0741040 | 0 | 0 | 0.0415875 | 0.2002641 | 0.1938063 | 0 | 0 | 0.0094630 | 0.4143771 |
 | 1998-10-01 | 0.4997467 | 0.0098778 | 0.0325869 | 0 | 0.0549688 | 0.0271063 | 0.2208388 | 0.0812661 | 0.1377854 | 0.0618298 | 0 | 0.0548527 | 0.0104899 | 0.0431262 | 0.0507595 | 0 | 0.0598032 | 0 | 0.3606382 | 0 | 0 | 0.0711770 | 0 | 0 | 0.0414181 | 0.0010268 | 0.0042391 | 0 | 0 | 0.1631342 | 0 | 0 | 0 | 0.0751685 | 0 | 0 | 0.0493496 | 0.2089563 | 0.2158620 | 0 | 0 | 0.0122396 | 0.4334731 |
 
+Environmental data is also deseasonalized
+
+``` r
+environmental_data_deseasonalized <- environmental_data |>
+  mutate(across(-date, ~ asymmetric_moving_average(., 6, 5)))
+```
+
+``` r
+head(environmental_data_deseasonalized, n = 10)
+```
+
+| date | temperature | NH4 | chlorophyll_a | phaeopigments | precipitations | wind_speed | nao | eap |
+|:---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1998-01-01 | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1998-02-01 | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1998-03-01 | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1998-04-01 | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1998-05-01 | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1998-06-01 | NA | NA | NA | NA | NA | NA | NA | NA |
+| 1998-07-01 | 12.67000 | 5.969000 | 5.305500 | 0.926625 | 57.76667 | 6.333333 | -0.0683333 | 0.5900000 |
+| 1998-08-01 | 12.67417 | 5.975250 | 5.246333 | 0.977875 | 57.41667 | 6.300000 | 0.0733333 | 0.5558333 |
+| 1998-09-01 | 12.66583 | 5.914208 | 5.270500 | 1.048917 | 58.26667 | 6.500000 | 0.1158333 | 0.3083333 |
+| 1998-10-01 | 12.63083 | 6.130875 | 5.056500 | 1.090917 | 58.38333 | 6.416667 | -0.0066667 | 0.1000000 |
+
 We can remove the missing values left over by the moving window
 
 ``` r
@@ -107,6 +141,9 @@ zooplankton_deseasonalized <- zooplankton_deseasonalized |>
   na.omit()
 
 phytoplankton_deseasonalized <- phytoplankton_deseasonalized |>
+  na.omit()
+
+environmental_data_deseasonalized <- environmental_data_deseasonalized |>
   na.omit()
 ```
 
@@ -122,6 +159,12 @@ write.csv(
 write.csv(
   phytoplankton_deseasonalized,
   here("Data/Temp/phyto_deseasonalized.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  environmental_data_deseasonalized,
+  here("Data/Temp/env_deseasonalized.csv"),
   row.names = FALSE
 )
 ```
