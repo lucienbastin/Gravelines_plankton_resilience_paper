@@ -89,7 +89,7 @@ gravelines_environment |>
 
 Some measures of NO~3~ and NO~3~+NO~2~ have no unit associated. However we won't be keeping those variables (see later) so that is not a problem.
 
-Convert dataset to wide format :
+Convert dataset to wide format and compute the mean of each variable by month :
 
 ```{r}
 gravelines_environment <- gravelines_environment |>
