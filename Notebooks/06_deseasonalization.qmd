@@ -58,7 +58,9 @@ asymmetric_moving_average <- function(x, n_left, n_right) {
 }
 ```
 
-Since the asymmetric moving average relies on the mean function, it is sensitive to changes in total plankton abundances between months. As we are only interested in th changes in community composition, we transform the plankton abundances using the Hellinger transformation before applying the moving window.
+Since the asymmetric moving average relies on the mean function, it is sensitive to important changes in plankton abundances between months. for each taxt; the averaging of several months inside a year would therefore be biased towards months with extreme abundance values (eg. spring blooms).
+
+Applying the Hellinger transformation before deseasonalizing limits this issue since this method relies on the proportions of each taxa for each observation, and not on total abundance.
 
 ```{r}
 zooplankton_deseasonalized <- zooplankton_data |>
