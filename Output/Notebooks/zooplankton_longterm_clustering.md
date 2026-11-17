@@ -1,6 +1,6 @@
 # Apply time-constrained clustering to the deseasonalized zooplankton timeseries
 Lucien Bastin
-2026-11-04
+2026-11-17
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -159,12 +159,13 @@ write.csv(
 sessionInfo()
 ```
 
-    R version 4.6.1 (2026-06-24)
-    Platform: x86_64-redhat-linux-gnu
-    Running under: Fedora Linux 44 (COSMIC)
+    R version 4.6.2 (2026-10-29)
+    Platform: x86_64-pc-linux-gnu
+    Running under: Ubuntu 26.04.1 LTS
 
     Matrix products: default
-    BLAS/LAPACK: FlexiBLAS OPENBLAS-OPENMP;  LAPACK version 3.12.1
+    BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.1 
+    LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.1;  LAPACK version 3.12.0
 
     locale:
      [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -190,20 +191,20 @@ sessionInfo()
       [7] fastmap_1.2.0       promises_1.5.0      XML_3.99-0.25      
      [10] digest_0.6.39       mime_0.13           lifecycle_1.0.5    
      [13] sf_1.1-3            cluster_2.1.8.2     magrittr_2.0.5     
-     [16] compiler_4.6.1      rlang_1.3.0         progress_1.2.3     
-     [19] tools_4.6.1         igraph_2.3.4        yaml_2.3.12        
+     [16] compiler_4.6.2      rlang_1.3.0         progress_1.2.3     
+     [19] tools_4.6.2         igraph_2.3.4        yaml_2.3.12        
      [22] knitr_1.52          labeling_0.4.3      prettyunits_1.2.0  
      [25] interp_1.1-6        sp_2.2-4            classInt_0.4-11    
      [28] plyr_1.8.9          xml2_1.6.0          RColorBrewer_1.1-3 
      [31] RNeXML_2.4.11       KernSmooth_2.23-26  withr_3.0.3        
-     [34] purrr_1.2.2         grid_4.6.1          latticeExtra_0.6-31
+     [34] purrr_1.2.2         grid_4.6.2          latticeExtra_0.6-31
      [37] colorspace_2.1-4    xtable_1.8-8        e1071_1.7-17       
      [40] scales_1.4.0        MASS_7.3-65         cli_3.6.6          
      [43] rmarkdown_2.32      vegan_2.7-6         crayon_1.5.3       
      [46] generics_0.1.4      otel_0.2.0          httr_1.4.9         
      [49] reshape2_1.4.5      spdep_1.4-2         cachem_1.1.0       
      [52] proxy_0.4-29        DBI_1.3.0           ape_5.8-1          
-     [55] stringr_1.6.0       splines_4.6.1       parallel_4.6.1     
+     [55] stringr_1.6.0       splines_4.6.2       parallel_4.6.2     
      [58] s2_1.1.13           adegraphics_1.0-22  vctrs_0.7.3        
      [61] boot_1.3-32         Matrix_1.7-5        jsonlite_2.0.0     
      [64] spData_2.3.5        hms_1.1.4           phylobase_0.8.12   
@@ -217,7 +218,7 @@ sessionInfo()
      [88] httpuv_1.6.17       class_7.3-23        adegenet_2.1.11    
      [91] Rcpp_1.1.2          rncl_0.8.10         uuid_1.2-2         
      [94] gridExtra_2.3.1     nlme_3.1-169        permute_0.9-10     
-     [97] mgcv_1.9-4          xfun_0.62           adephylo_1.1-17    
+     [97] mgcv_1.9-5          xfun_0.62           adephylo_1.1-17    
     [100] pkgconfig_2.0.3    
 
-Document rendered using Quarto version 1.10.18.
+Document rendered using Quarto version 1.11.9.

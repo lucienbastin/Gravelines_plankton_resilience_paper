@@ -185,7 +185,7 @@ zoo_trajectory_plot <- ggplot() +
 
 ```{r}
 #| fig-width: 10.5
-#| fig-height: 8.5
+#| fig-height: 10.5
 
 zoo_trajectory_plot
 ```

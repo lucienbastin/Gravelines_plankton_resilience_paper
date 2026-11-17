@@ -1,6 +1,6 @@
 # Deseasonalize timeseries to focus on long-term changes
 Lucien Bastin
-2026-11-05
+2026-11-17
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -73,10 +73,14 @@ asymmetric_moving_average <- function(x, n_left, n_right) {
 ```
 
 Since the asymmetric moving average relies on the mean function, it is
-sensitive to changes in total plankton abundances between months. As we
-are only interested in th changes in community composition, we transform
-the plankton abundances using the Hellinger transformation before
-applying the moving window.
+sensitive to important changes in plankton abundances between months.
+for each taxt; the averaging of several months inside a year would
+therefore be biased towards months with extreme abundance values (eg.
+spring blooms).
+
+Applying the Hellinger transformation before deseasonalizing limits this
+issue since this method relies on the proportions of each taxa for each
+observation, and not on total abundance.
 
 ``` r
 zooplankton_deseasonalized <- zooplankton_data |>
@@ -175,12 +179,13 @@ write.csv(
 sessionInfo()
 ```
 
-    R version 4.6.1 (2026-06-24)
-    Platform: x86_64-redhat-linux-gnu
-    Running under: Fedora Linux 44 (COSMIC)
+    R version 4.6.2 (2026-10-29)
+    Platform: x86_64-pc-linux-gnu
+    Running under: Ubuntu 26.04.1 LTS
 
     Matrix products: default
-    BLAS/LAPACK: FlexiBLAS OPENBLAS-OPENMP;  LAPACK version 3.12.1
+    BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.1 
+    LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.1;  LAPACK version 3.12.0
 
     locale:
      [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -201,15 +206,15 @@ sessionInfo()
     [5] conflicted_1.2.0
 
     loaded via a namespace (and not attached):
-     [1] Matrix_1.7-5     jsonlite_2.0.0   compiler_4.6.1   renv_1.3.1      
-     [5] tidyselect_1.2.1 parallel_4.6.1   cluster_2.1.8.2  splines_4.6.1   
+     [1] Matrix_1.7-5     jsonlite_2.0.0   compiler_4.6.2   renv_1.3.1      
+     [5] tidyselect_1.2.1 parallel_4.6.2   cluster_2.1.8.2  splines_4.6.2   
      [9] yaml_2.3.12      fastmap_1.2.0    lattice_0.22-9   R6_2.6.1        
     [13] generics_0.1.4   knitr_1.52       MASS_7.3-65      tibble_3.3.1    
     [17] rprojroot_2.1.1  pillar_1.11.1    rlang_1.3.0      cachem_1.1.0    
     [21] xfun_0.62        otel_0.2.0       memoise_2.0.1    cli_3.6.6       
-    [25] withr_3.0.3      magrittr_2.0.5   mgcv_1.9-4       digest_0.6.39   
-    [29] grid_4.6.1       lifecycle_1.0.5  nlme_3.1-169     vctrs_0.7.3     
-    [33] evaluate_1.0.5   glue_1.8.1       rmarkdown_2.32   tools_4.6.1     
+    [25] withr_3.0.3      magrittr_2.0.5   mgcv_1.9-5       digest_0.6.39   
+    [29] grid_4.6.2       lifecycle_1.0.5  nlme_3.1-169     vctrs_0.7.3     
+    [33] evaluate_1.0.5   glue_1.8.1       rmarkdown_2.32   tools_4.6.2     
     [37] pkgconfig_2.0.3  htmltools_0.5.9 
 
-Document rendered using Quarto version 1.10.18.
+Document rendered using Quarto version 1.11.9.

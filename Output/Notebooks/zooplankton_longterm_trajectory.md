@@ -1,6 +1,6 @@
 # Display the long-term trajectory of the zooplankton community
 Lucien Bastin
-2026-11-04
+2026-11-17
 
 - [Libraries and data](#libraries-and-data)
   - [Libraries](#libraries)
@@ -215,12 +215,13 @@ zoo_trajectory_plot
 sessionInfo()
 ```
 
-    R version 4.6.1 (2026-06-24)
-    Platform: x86_64-redhat-linux-gnu
-    Running under: Fedora Linux 44 (COSMIC)
+    R version 4.6.2 (2026-10-29)
+    Platform: x86_64-pc-linux-gnu
+    Running under: Ubuntu 26.04.1 LTS
 
     Matrix products: default
-    BLAS/LAPACK: FlexiBLAS OPENBLAS-OPENMP;  LAPACK version 3.12.1
+    BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.1 
+    LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.1;  LAPACK version 3.12.0
 
     locale:
      [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -246,21 +247,21 @@ sessionInfo()
      [4] S7_0.2.2            fastmap_1.2.0       promises_1.5.0     
      [7] XML_3.99-0.25       digest_0.6.39       timechange_0.4.0   
     [10] mime_0.13           lifecycle_1.0.5     sf_1.1-3           
-    [13] cluster_2.1.8.2     magrittr_2.0.5      compiler_4.6.1     
-    [16] rlang_1.3.0         progress_1.2.3      tools_4.6.1        
+    [13] cluster_2.1.8.2     magrittr_2.0.5      compiler_4.6.2     
+    [16] rlang_1.3.0         progress_1.2.3      tools_4.6.2        
     [19] igraph_2.3.4        yaml_2.3.12         knitr_1.52         
     [22] labeling_0.4.3      prettyunits_1.2.0   interp_1.1-6       
     [25] sp_2.2-4            classInt_0.4-11     plyr_1.8.9         
     [28] xml2_1.6.0          RColorBrewer_1.1-3  RNeXML_2.4.11      
     [31] KernSmooth_2.23-26  withr_3.0.3         purrr_1.2.2        
-    [34] grid_4.6.1          latticeExtra_0.6-31 colorspace_2.1-4   
+    [34] grid_4.6.2          latticeExtra_0.6-31 colorspace_2.1-4   
     [37] xtable_1.8-8        e1071_1.7-17        scales_1.4.0       
     [40] MASS_7.3-65         cli_3.6.6           rmarkdown_2.32     
     [43] crayon_1.5.3        generics_0.1.4      otel_0.2.0         
     [46] httr_1.4.9          reshape2_1.4.5      spdep_1.4-2        
     [49] cachem_1.1.0        proxy_0.4-29        DBI_1.3.0          
-    [52] ape_5.8-1           stringr_1.6.0       splines_4.6.1      
-    [55] parallel_4.6.1      s2_1.1.13           adegraphics_1.0-22 
+    [52] ape_5.8-1           stringr_1.6.0       splines_4.6.2      
+    [55] parallel_4.6.2      s2_1.1.13           adegraphics_1.0-22 
     [58] vctrs_0.7.3         boot_1.3-32         Matrix_1.7-5       
     [61] jsonlite_2.0.0      spData_2.3.5        hms_1.1.4          
     [64] phylobase_0.8.12    seqinr_4.2-44       jpeg_0.1-11        
@@ -272,7 +273,7 @@ sessionInfo()
     [82] memoise_2.0.1       renv_1.3.1          httpuv_1.6.17      
     [85] class_7.3-23        adegenet_2.1.11     Rcpp_1.1.2         
     [88] rncl_0.8.10         uuid_1.2-2          nlme_3.1-169       
-    [91] mgcv_1.9-4          xfun_0.62           adephylo_1.1-17    
+    [91] mgcv_1.9-5          xfun_0.62           adephylo_1.1-17    
     [94] pkgconfig_2.0.3    
 
-Document rendered using Quarto version 1.10.18.
+Document rendered using Quarto version 1.11.9.
